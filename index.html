@@ -1079,111 +1079,138 @@
                 });
         }
 
-        function loadOrders(filterStatus = 'all') {
-            tableLoading.classList.remove('hidden');
+      function loadOrders(filterStatus = 'all') {
+    tableLoading.classList.remove('hidden');
+    ordersTableBody.innerHTML = ''; // Clear the table body
+    
+    let query = db.collection('orders');
+    
+    if (filterStatus !== 'all') {
+        query = query.where('status', '==', 
+            filterStatus === 'pending' ? 'معلق' : 
+            filterStatus === 'accepted' ? 'مقبول' : 'مرفوض');
+    }
+    
+    query.orderBy('createdAt', 'desc').get()
+        .then((querySnapshot) => {
+            tableLoading.classList.add('hidden');
             
-            let query = db.collection('orders');
-            
-            if (filterStatus !== 'all') {
-                query = query.where('status', '==', filterStatus === 'pending' ? 'معلق' : filterStatus === 'accepted' ? 'مقبول' : 'مرفوض');
+            if (querySnapshot.empty) {
+                ordersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="12" class="py-4 text-center text-gray-500">
+                            لا توجد طلبات ${filterStatus === 'all' ? '' : 
+                            filterStatus === 'pending' ? 'معلقة' : 
+                            filterStatus === 'accepted' ? 'مقبولة' : 'مرفوضة'} للعرض
+                        </td>
+                    </tr>
+                `;
+                return;
             }
             
-            query.orderBy('createdAt', 'desc').get()
-                .then((querySnapshot) => {
-                    tableLoading.classList.add('hidden');
-                    
-                    if (querySnapshot.empty) {
-                        ordersTableBody.innerHTML = `
-                            <tr>
-                                <td colspan="12" class="py-4 text-center text-gray-500">
-                                    لا توجد طلبات ${filterStatus === 'all' ? '' : filterStatus === 'pending' ? 'معلقة' : filterStatus === 'accepted' ? 'مقبولة' : 'مرفوضة'} للعرض
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    ordersTableBody.innerHTML = '';
-                    
-                    querySnapshot.forEach((doc) => {
-                        const order = doc.data();
-                        const orderId = doc.id;
-                        const remainingDays = calculateRemainingDays(order.deliveryDate);
-                        
-                        const row = document.createElement('tr');
-                        row.classList.add('border-b', 'hover:bg-gray-50', 'transition', 'table-row');
-                        
-                        row.innerHTML = `
-                            <td class="py-3 px-3 text-right">${orderId.slice(0, 8)}</td>
-                            <td class="py-3 px-3 text-right">${order.customerName}</td>
-                            <td class="py-3 px-3 text-right">${order.size}</td>
-                            <td class="py-3 px-3 text-right">${order.color}</td>
-                            <td class="py-3 px-3 text-right">${order.printing}</td>
-                            <td class="py-3 px-3 text-right">${order.handle}</td>
-                            <td class="py-3 px-3 text-right">${order.quantity}</td>
-                            <td class="py-3 px-3 text-right">${order.paymentTerms.length > 20 ? order.paymentTerms.substring(0, 20) + '...' : order.paymentTerms}</td>
-                            <td class="py-3 px-3 text-right">${formatDate(order.deliveryDate)}</td>
-                            <td class="py-3 px-3 text-right">${remainingDays}</td>
-                            <td class="py-3 px-3 text-right">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}">
-                                    ${order.status}
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-right">
-                                <div class="flex justify-end space-x-2 space-x-reverse">
-                                    <button data-order-id="${orderId}" class="view-order-btn actions-btn text-blue-600 hover:text-blue-800" title="عرض">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    ${userRole === 'admin' ? `
-                                    <button data-order-id="${orderId}" class="edit-order-btn actions-btn text-yellow-600 hover:text-yellow-800" title="تعديل">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button data-order-id="${orderId}" class="delete-order-btn actions-btn text-red-600 hover:text-red-800" title="حذف">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                    ` : ''}
-                                    ${(userRole === 'admin' || userRole === 'supervisor') && order.status === 'معلق' ? `
-                                    <button data-order-id="${orderId}" class="accept-order-btn actions-btn text-green-600 hover:text-green-800" title="قبول">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button data-order-id="${orderId}" class="reject-order-btn actions-btn text-red-600 hover:text-red-800" title="رفض">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                    ` : ''}
-                                </div>
-                            </td>
-                        `;
-                        
-                        ordersTableBody.appendChild(row);
-                    });
-                    
-                    // Add event listeners for actions
-                    document.querySelectorAll('.view-order-btn').forEach(btn => {
-                        btn.addEventListener('click', () => viewOrder(btn.dataset.orderId));
-                    });
-                    
-                    document.querySelectorAll('.edit-order-btn').forEach(btn => {
-                        btn.addEventListener('click', () => editOrder(btn.dataset.orderId));
-                    });
-                    
-                    document.querySelectorAll('.delete-order-btn').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            deleteOrderId.value = btn.dataset.orderId;
-                            confirmDeleteModal.classList.remove('hidden');
-                        });
-                    });
-                    
-                    document.querySelectorAll('.accept-order-btn').forEach(btn => {
-                        btn.addEventListener('click', () => acceptOrder(btn.dataset.orderId));
-                    });
-                    
-                    document.querySelectorAll('.reject-order-btn').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            rejectOrderId.value = btn.dataset.orderId;
-                            rejectOrderModal.classList.remove('hidden');
-                        });
-                    });
-                })
+            // Process and display orders here
+            displayOrders(querySnapshot.docs);
+        })
+        .catch((error) => {
+            tableLoading.classList.add('hidden');
+            console.error("Error loading orders: ", error);
+            ordersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="12" class="py-4 text-center text-red-500">
+                        خطأ في تحميل البيانات: ${error.message}
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+function displayOrders(orders) {
+    ordersTableBody.innerHTML = '';
+    
+    orders.forEach((doc) => {
+        const order = doc.data();
+        const orderId = doc.id;
+        const remainingDays = calculateRemainingDays(order.deliveryDate);
+        
+        const row = document.createElement('tr');
+        row.classList.add('border-b', 'hover:bg-gray-50', 'transition', 'table-row');
+        
+        row.innerHTML = `
+            <td class="py-3 px-3 text-right">${orderId.slice(0, 8)}</td>
+            <td class="py-3 px-3 text-right">${order.customerName}</td>
+            <td class="py-3 px-3 text-right">${order.size}</td>
+            <td class="py-3 px-3 text-right">${order.color}</td>
+            <td class="py-3 px-3 text-right">${order.printing}</td>
+            <td class="py-3 px-3 text-right">${order.handle}</td>
+            <td class="py-3 px-3 text-right">${order.quantity}</td>
+            <td class="py-3 px-3 text-right">${order.paymentTerms.length > 20 ? 
+                order.paymentTerms.substring(0, 20) + '...' : order.paymentTerms}</td>
+            <td class="py-3 px-3 text-right">${formatDate(order.deliveryDate)}</td>
+            <td class="py-3 px-3 text-right">${remainingDays}</td>
+            <td class="py-3 px-3 text-right">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}">
+                    ${order.status}
+                </span>
+            </td>
+            <td class="py-3 px-3 text-right">
+                <div class="flex justify-end space-x-2 space-x-reverse">
+                    <button data-order-id="${orderId}" class="view-order-btn actions-btn text-blue-600 hover:text-blue-800" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${userRole === 'admin' ? `
+                    <button data-order-id="${orderId}" class="edit-order-btn actions-btn text-yellow-600 hover:text-yellow-800" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button data-order-id="${orderId}" class="delete-order-btn actions-btn text-red-600 hover:text-red-800" title="حذف">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    ` : ''}
+                    ${(userRole === 'admin' || userRole === 'supervisor') && order.status === 'معلق' ? `
+                    <button data-order-id="${orderId}" class="accept-order-btn actions-btn text-green-600 hover:text-green-800" title="قبول">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button data-order-id="${orderId}" class="reject-order-btn actions-btn text-red-600 hover:text-red-800" title="رفض">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+        
+        ordersTableBody.appendChild(row);
+    });
+    
+    // Add event listeners for action buttons
+    addOrderActionEventListeners();
+}
+
+function addOrderActionEventListeners() {
+    document.querySelectorAll('.view-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => viewOrder(btn.dataset.orderId));
+    });
+    
+    document.querySelectorAll('.edit-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => editOrder(btn.dataset.orderId));
+    });
+    
+    document.querySelectorAll('.delete-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            deleteOrderId.value = btn.dataset.orderId;
+            confirmDeleteModal.classList.remove('hidden');
+        });
+    });
+    
+    document.querySelectorAll('.accept-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => acceptOrder(btn.dataset.orderId));
+    });
+    
+    document.querySelectorAll('.reject-order-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            rejectOrderId.value = btn.dataset.orderId;
+            rejectOrderModal.classList.remove('hidden');
+        });
+    });
+}
                 .catch((error) => {
                     tableLoading.classList.add('hidden');
                     console.error("Error loading orders: ", error);
@@ -1659,6 +1686,7 @@
             });
             
             // Filter Buttons
+           // في قسم معالجة الأحداث
             filterBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const filter = btn.dataset.filter;
