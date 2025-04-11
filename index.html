@@ -3,300 +3,554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة طلبات العبوات البلاستيكية</title>
+    <title>نظام إدارة طلبات عبوات البلاستيك</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Excel Export -->
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
-    <!-- PDF Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+    
+    <!-- PDF & Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#6c757d',
+                        success: '#198754',
+                        danger: '#dc3545',
+                        warning: '#ffc107',
+                        info: '#0dcaf0',
+                        light: '#f8f9fa',
+                        dark: '#212529',
+                    }
+                }
+            }
+        }
+
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
         
-        :root {
-            --primary-color: #5D5CDE;
-            --primary-dark: #4a49b0;
-            --primary-light: #7a79e6;
-            --success-color: #48BB78;
-            --warning-color: #ECC94B;
-            --danger-color: #F56565;
-            --text-color: #2D3748;
-            --bg-color: #FFFFFF;
-            --card-bg: #F7FAFC;
-            --border-color: #E2E8F0;
-        }
-
-        .dark {
-            --primary-color: #5D5CDE;
-            --primary-dark: #4a49b0;
-            --primary-light: #7a79e6;
-            --success-color: #48BB78;
-            --warning-color: #ECC94B;
-            --danger-color: #F56565;
-            --text-color: #E2E8F0;
-            --bg-color: #181818;
-            --card-bg: #2D3748;
-            --border-color: #4A5568;
-        }
-
         body {
             font-family: 'Tajawal', sans-serif;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            transition: background-color 0.3s, color 0.3s;
         }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            transition: background-color 0.3s, border-color 0.3s;
+        
+        /* Dark Mode Styles */
+        .dark {
+            color-scheme: dark;
         }
-
-        input, select, textarea {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        
+        .dark body {
+            background-color: #181818;
+            color: #e2e2e2;
         }
-
-        button {
-            transition: all 0.3s ease;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            text-align: right;
-            border-bottom: 1px solid var(--border-color);
-            transition: border-color 0.3s;
-        }
-
-        th {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        tr:hover {
-            background-color: rgba(93, 92, 222, 0.1);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-
-        .btn-danger:hover {
-            background-color: #E53E3E;
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-
-        .btn-success:hover {
-            background-color: #38A169;
-        }
-
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-
-        .btn-warning:hover {
-            background-color: #D69E2E;
-        }
-
-        .btn-secondary {
-            background-color: #718096;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-
-        .btn-secondary:hover {
-            background-color: #4A5568;
-        }
-
-        /* طباعة */
+        
+        /* Print Styles */
         @media print {
             body * {
                 visibility: hidden;
             }
-
-            .print-container, .print-container * {
+            
+            #ordersTable, #ordersTable * {
                 visibility: visible;
             }
-
-            .no-print, .action-column, .order-code-column {
-                display: none !important;
-            }
-
-            .print-container {
+            
+            #ordersTable {
                 position: absolute;
-                left: 0;
                 top: 0;
+                right: 0;
                 width: 100%;
             }
-
+            
+            .no-print, .actions-column, .status-actions, .dataTables_filter, 
+            .dataTables_length, .dataTables_paginate, .dataTables_info {
+                display: none !important;
+            }
+            
+            html, body {
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 0;
+            }
+            
             @page {
                 size: landscape;
             }
         }
-
-        /* للأجهزة المحمولة */
-        @media (max-width: 768px) {
-            .responsive-table {
-                overflow-x: auto;
-            }
-            
-            .form-container {
-                padding: 1rem;
-            }
+        
+        /* Custom DataTables styling */
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
         }
-
-        /* Loading indicator */
-        .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+        
+        .dark .dataTables_wrapper .dataTables_filter input,
+        .dark .dataTables_wrapper .dataTables_length select {
+            background-color: #333;
+            color: #e2e2e2;
+            border-color: #555;
         }
-
-        .dark .loader {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left: 4px solid var(--primary-color);
+        
+        table.dataTable thead th, 
+        table.dataTable thead td {
+            padding: 10px 18px;
+            border-bottom: 1px solid #ddd;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        
+        .dark table.dataTable thead th, 
+        .dark table.dataTable thead td {
+            border-bottom: 1px solid #444;
         }
-
-        /* Modal */
-        .modal {
-            display: none;
+        
+        .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #e2e2e2 !important;
+        }
+        
+        .dark table.dataTable tbody tr {
+            background-color: #222;
+        }
+        
+        /* Status styles */
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-delivered {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .status-overdue {
+            background-color: #ffe6e6;
+            color: #993333;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .dark .status-pending {
+            background-color: #3a3000;
+            color: #ffdb7d;
+        }
+        
+        .dark .status-accepted {
+            background-color: #0a3622;
+            color: #75e0a7;
+        }
+        
+        .dark .status-rejected {
+            background-color: #380e14;
+            color: #f5a8b0;
+        }
+        
+        .dark .status-delivered {
+            background-color: #0c3c47;
+            color: #8dddec;
+        }
+        
+        .dark .status-overdue {
+            background-color: #3d1414;
+            color: #ffb3b3;
+        }
+        
+        /* Inactivity timer */
+        .inactivity-warning {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            bottom: 20px;
+            right: 20px;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: none;
             z-index: 1000;
-            overflow: auto;
-            padding: 20px;
         }
-
-        .modal-content {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s;
-        }
-
-        .close {
-            color: var(--text-color);
-            float: left;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: var(--primary-color);
+        
+        .dark .inactivity-warning {
+            background-color: #380e14;
+            color: #f5a8b0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
     </style>
 </head>
-<body>
-    <div id="login-container" class="flex flex-col items-center justify-center min-h-screen p-4">
-        <div class="card p-8 max-w-md w-full">
-            <h1 class="text-2xl font-bold mb-6 text-center">تسجيل الدخول</h1>
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label for="email" class="block mb-2">البريد الإلكتروني</label>
-                    <input type="email" id="email" name="email" class="w-full p-3 rounded-md text-base" required>
+<body class="dark:bg-gray-900 dark:text-white">
+    <div id="inactivityWarning" class="inactivity-warning">
+        <p>سيتم تسجيل الخروج تلقائيًا بعد <span id="logoutCountdown">60</span> ثانية من عدم النشاط</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+                    تسجيل الدخول
+                </h2>
+            </div>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div class="rounded-md -space-y-px">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">البريد الإلكتروني</label>
+                        <input id="email" name="email" type="email" required class="appearance-none rounded-md relative block w-full px-3 py-2 mt-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 text-base">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">كلمة المرور</label>
+                        <input id="password" name="password" type="password" required class="appearance-none rounded-md relative block w-full px-3 py-2 mt-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 text-base">
+                    </div>
                 </div>
-                <div>
-                    <label for="password" class="block mb-2">كلمة المرور</label>
-                    <input type="password" id="password" name="password" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <button type="submit" id="login-btn" class="btn-primary w-full py-3">
-                        <span id="login-btn-text">تسجيل الدخول</span>
-                        <div id="login-loader" class="loader hidden"></div>
+
+                <div class="flex items-center justify-between">
+                    <button type="button" id="registerBtn" class="group relative w-1/2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        تسجيل حساب جديد
+                    </button>
+                    <button type="submit" class="group relative w-1/2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        تسجيل الدخول
                     </button>
                 </div>
-                <div id="login-error" class="text-red-500 text-center hidden"></div>
+                <div id="loginError" class="mt-3 text-center text-red-600 dark:text-red-400 text-sm hidden"></div>
             </form>
         </div>
     </div>
 
-    <div id="app-container" class="hidden min-h-screen">
-        <header class="bg-gray-100 dark:bg-gray-800 py-4 px-6 flex justify-between items-center shadow-md">
-            <h1 class="text-2xl font-bold">نظام إدارة طلبات العبوات البلاستيكية</h1>
-            <div class="flex items-center space-x-2 space-x-reverse">
-                <span id="user-info" class="ml-4"></span>
-                <button id="logout-btn" class="btn-danger">
-                    <i class="fas fa-sign-out-alt ml-2"></i>تسجيل الخروج
-                </button>
+    <!-- Registration Modal -->
+    <div id="registerModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-800 dark:opacity-80"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                <div class="absolute top-0 right-0 pt-4 pr-4">
+                    <button type="button" id="closeRegisterModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">إغلاق</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:text-right">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                        تسجيل حساب جديد
+                    </h3>
+                    <form id="registerForm" class="mt-4">
+                        <div class="mb-4">
+                            <label for="regName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">الاسم</label>
+                            <input type="text" id="regName" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
+                        </div>
+                        <div class="mb-4">
+                            <label for="regEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">البريد الإلكتروني</label>
+                            <input type="email" id="regEmail" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
+                        </div>
+                        <div class="mb-4">
+                            <label for="regPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">كلمة المرور</label>
+                            <input type="password" id="regPassword" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
+                        </div>
+                        <div class="mb-4">
+                            <label for="regConfirmPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">تأكيد كلمة المرور</label>
+                            <input type="password" id="regConfirmPassword" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
+                        </div>
+                        <div id="regError" class="mt-2 text-red-600 dark:text-red-400 text-sm hidden"></div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mr-3 sm:w-auto sm:text-sm">
+                                تسجيل
+                            </button>
+                            <button type="button" id="cancelRegister" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <header class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">نظام إدارة طلبات عبوات البلاستيك</h1>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <span id="userName" class="text-gray-700 dark:text-gray-300 ml-4"></span>
+                    <button id="logoutBtn" class="bg-primary text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        تسجيل الخروج
+                    </button>
+                </div>
             </div>
         </header>
 
-        <main class="p-4 md:p-6">
-            <!-- نموذج إضافة طلب جديد -->
-            <div class="card mb-8 form-container">
-                <div class="p-4 md:p-6">
-                    <h2 class="text-xl font-bold mb-4">إضافة طلب جديد</h2>
-                    <form id="order-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                            <label for="customer-name" class="block mb-2">اسم العميل</label>
-                            <input type="text" id="customer-name" name="customerName" class="w-full p-3 rounded-md text-base" required>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Order Form -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8">
+                <h2 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">طلب تصنيع عبوات بلاستيك</h2>
+                <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Customer Name -->
+                    <div>
+                        <label for="customerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">اسم العميل</label>
+                        <input type="text" id="customerName" name="customerName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                    </div>
+
+                    <!-- Size -->
+                    <div>
+                        <label for="size" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المقاس</label>
+                        <select id="size" name="size" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                            <option value="" disabled selected>اختر المقاس</option>
+                            <option value="بستلة 21">بستلة 21</option>
+                            <option value="بستلة 19">بستلة 19</option>
+                            <option value="بستلة 17.2">بستلة 17.2</option>
+                            <option value="بستلة 17">بستلة 17</option>
+                            <option value="بستلة 16">بستلة 16</option>
+                            <option value="بستلة 14">بستلة 14</option>
+                            <option value="بستلة 13">بستلة 13</option>
+                            <option value="بستلة 12">بستلة 12</option>
+                            <option value="بستلة 11">بستلة 11</option>
+                            <option value="بستلة 11.2">بستلة 11.2</option>
+                            <option value="بستلة 10">بستلة 10</option>
+                            <option value="بستلة 9">بستلة 9</option>
+                            <option value="بستلة 6">بستلة 6</option>
+                            <option value="بستلة 6.2">بستلة 6.2</option>
+                            <option value="بستلة 6.1">بستلة 6.1</option>
+                            <option value="بستلة 3.8">بستلة 3.8</option>
+                            <option value="بستلة 3.9">بستلة 3.9</option>
+                            <option value="بستلة 3.7">بستلة 3.7</option>
+                            <option value="بستلة 3">بستلة 3</option>
+                            <option value="بستلة 3.1">بستلة 3.1</option>
+                            <option value="بستلة 2.6">بستلة 2.6</option>
+                            <option value="عبوة 1.3">عبوة 1.3</option>
+                            <option value="عبوة 1.25">عبوة 1.25</option>
+                            <option value="عبوة كيلو">عبوة كيلو</option>
+                            <option value="عبوة 1 لتر">عبوة 1 لتر</option>
+                            <option value="عبوة 0.9 لتر">عبوة 0.9 لتر</option>
+                            <option value="عبوة 500 مللى">عبوة 500 مللى</option>
+                        </select>
+                    </div>
+
+                    <!-- Color -->
+                    <div>
+                        <label for="color" class="block text-sm font-medium text-gray-700 dark:text-gray-300">اللون</label>
+                        <select id="color" name="color" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                            <option value="" disabled selected>اختر اللون</option>
+                            <option value="ابيض">ابيض</option>
+                            <option value="شفاف">شفاف</option>
+                            <option value="هابى باك">هابى باك</option>
+                            <option value="سادة">سادة</option>
+                            <option value="مطبوع">مطبوع</option>
+                            <option value="هابى">هابى</option>
+                        </select>
+                    </div>
+
+                    <!-- Print Type -->
+                    <div>
+                        <label for="printType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الطباعة</label>
+                        <select id="printType" name="printType" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                            <option value="" disabled selected>اختر نوع الطباعة</option>
+                            <option value="سادة">سادة</option>
+                            <option value="حرارى">حرارى</option>
+                            <option value="سيلك سكرين">سيلك سكرين</option>
+                        </select>
+                    </div>
+
+                    <!-- Handle -->
+                    <div>
+                        <label for="handle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">بيد/بدون يد</label>
+                        <select id="handle" name="handle" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                            <option value="" disabled selected>اختر النوع</option>
+                            <option value="بيد">بيد</option>
+                            <option value="بدون يد">بدون يد</option>
+                        </select>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300">العدد المطلوب</label>
+                        <input type="number" id="quantity" name="quantity" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                    </div>
+
+                    <!-- Delivery Date -->
+                    <div>
+                        <label for="deliveryDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاريخ التسليم</label>
+                        <input type="date" id="deliveryDate" name="deliveryDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                    </div>
+
+                    <!-- Payment Terms -->
+                    <div class="md:col-span-2 lg:col-span-3">
+                        <label for="paymentTerms" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شروط الدفع</label>
+                        <textarea id="paymentTerms" name="paymentTerms" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base"></textarea>
+                    </div>
+
+                    <div class="md:col-span-2 lg:col-span-3 flex flex-wrap justify-end gap-3 mt-4">
+                        <button type="button" id="resetFormBtn" class="py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            إعادة تعيين الحقول
+                        </button>
+                        <button type="submit" id="submitOrderBtn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            إرسال الطلب
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div class="flex flex-wrap justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">قائمة الطلبات</h2>
+                    
+                    <div class="flex flex-wrap gap-4 mt-4 sm:mt-0">
+                        <div class="w-full sm:w-auto">
+                            <label for="statusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تصفية حسب الحالة</label>
+                            <select id="statusFilter" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                                <option value="all">إلغاء التصفية</option>
+                                <option value="pending">الطلبات المعلقة</option>
+                                <option value="accepted">الطلبات المقبولة</option>
+                                <option value="rejected">الطلبات المرفوضة</option>
+                                <option value="delivered">طلبات تم تسليمها</option>
+                                <option value="overdue">طلبات لم تسلم (تخطت الموعد)</option>
+                                <option value="today">طلبات تسليم اليوم</option>
+                            </select>
                         </div>
                         
-                        <div>
-                            <label for="size" class="block mb-2">المقاس</label>
-                            <select id="size" name="size" class="w-full p-3 rounded-md text-base" required>
-                                <option value="">اختر المقاس</option>
+                        <div class="w-full sm:w-auto">
+                            <label for="daysFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تصفية حسب الأيام المتبقية</label>
+                            <input type="number" id="daysFilter" min="0" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-base">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table id="ordersTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">اسم العميل</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">المقاس</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">اللون</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الطباعة</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">بيد/بدون يد</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">العدد المطلوب</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">شروط الدفع</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">تاريخ التسليم</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">الأيام المتبقية</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">حالة الطلب</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider actions-column">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 flex flex-wrap gap-3 justify-start">
+                    <button id="printTableBtn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 no-print">
+                        <i class="fas fa-print mr-2"></i> طباعة الجدول
+                    </button>
+                    <button id="exportPdfBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 no-print">
+                        <i class="fas fa-file-pdf mr-2"></i> تصدير PDF
+                    </button>
+                    <button id="exportExcelBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 no-print">
+                        <i class="fas fa-file-excel mr-2"></i> تصدير Excel
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-800 dark:opacity-80"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                <div class="absolute top-0 right-0 pt-4 pr-4">
+                    <button type="button" id="closeOrderDetailsModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">إغلاق</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:text-right">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                        تفاصيل الطلب
+                    </h3>
+                    <div id="orderDetailsContent" class="mt-4 text-right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Order Modal -->
+    <div id="editOrderModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-800 dark:opacity-80"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                <div class="absolute top-0 right-0 pt-4 pr-4">
+                    <button type="button" id="closeEditOrderModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">إغلاق</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:text-right">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                        تعديل الطلب
+                    </h3>
+                    <form id="editOrderForm" class="mt-4">
+                        <input type="hidden" id="editOrderId">
+                        <div class="mb-4">
+                            <label for="editCustomerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">اسم العميل</label>
+                            <input type="text" id="editCustomerName" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
+                        </div>
+                        <div class="mb-4">
+                            <label for="editSize" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">المقاس</label>
+                            <select id="editSize" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                                 <option value="بستلة 21">بستلة 21</option>
                                 <option value="بستلة 19">بستلة 19</option>
                                 <option value="بستلة 17.2">بستلة 17.2</option>
@@ -326,11 +580,9 @@
                                 <option value="عبوة 500 مللى">عبوة 500 مللى</option>
                             </select>
                         </div>
-                        
-                        <div>
-                            <label for="color" class="block mb-2">اللون</label>
-                            <select id="color" name="color" class="w-full p-3 rounded-md text-base" required>
-                                <option value="">اختر اللون</option>
+                        <div class="mb-4">
+                            <label for="editColor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">اللون</label>
+                            <select id="editColor" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                                 <option value="ابيض">ابيض</option>
                                 <option value="شفاف">شفاف</option>
                                 <option value="هابى باك">هابى باك</option>
@@ -339,307 +591,123 @@
                                 <option value="هابى">هابى</option>
                             </select>
                         </div>
-                        
-                        <div>
-                            <label for="printing" class="block mb-2">الطباعة</label>
-                            <select id="printing" name="printing" class="w-full p-3 rounded-md text-base" required>
-                                <option value="">اختر نوع الطباعة</option>
+                        <div class="mb-4">
+                            <label for="editPrintType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">الطباعة</label>
+                            <select id="editPrintType" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                                 <option value="سادة">سادة</option>
                                 <option value="حرارى">حرارى</option>
                                 <option value="سيلك سكرين">سيلك سكرين</option>
                             </select>
                         </div>
-                        
-                        <div>
-                            <label for="handle" class="block mb-2">بيد / بدون يد</label>
-                            <select id="handle" name="handle" class="w-full p-3 rounded-md text-base" required>
-                                <option value="">اختر النوع</option>
+                        <div class="mb-4">
+                            <label for="editHandle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">بيد/بدون يد</label>
+                            <select id="editHandle" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                                 <option value="بيد">بيد</option>
                                 <option value="بدون يد">بدون يد</option>
                             </select>
                         </div>
-                        
-                        <div>
-                            <label for="quantity" class="block mb-2">العدد المطلوب</label>
-                            <input type="number" id="quantity" name="quantity" min="1" class="w-full p-3 rounded-md text-base" required>
+                        <div class="mb-4">
+                            <label for="editQuantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">العدد المطلوب</label>
+                            <input type="number" id="editQuantity" min="1" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                         </div>
-                        
-                        <div class="md:col-span-2 lg:col-span-3">
-                            <label for="payment-terms" class="block mb-2">شروط الدفع</label>
-                            <textarea id="payment-terms" name="paymentTerms" class="w-full p-3 rounded-md text-base" rows="3" required></textarea>
+                        <div class="mb-4">
+                            <label for="editDeliveryDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">تاريخ التسليم</label>
+                            <input type="date" id="editDeliveryDate" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3">
                         </div>
-                        
-                        <div>
-                            <label for="delivery-date" class="block mb-2">تاريخ التسليم</label>
-                            <input type="date" id="delivery-date" name="deliveryDate" class="w-full p-3 rounded-md text-base" required>
+                        <div class="mb-4">
+                            <label for="editPaymentTerms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">شروط الدفع</label>
+                            <textarea id="editPaymentTerms" rows="3" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3"></textarea>
                         </div>
-                        
-                        <div class="md:col-span-2 lg:col-span-3 flex flex-wrap gap-2 pt-4">
-                            <button type="submit" id="submit-order" class="btn-primary">
-                                <i class="fas fa-paper-plane ml-2"></i>إرسال الطلب
+                        <div id="editError" class="mt-2 text-red-600 dark:text-red-400 text-sm hidden"></div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mr-3 sm:w-auto sm:text-sm">
+                                حفظ التعديلات
                             </button>
-                            <button type="reset" id="reset-form" class="btn-secondary">
-                                <i class="fas fa-redo ml-2"></i>إعادة تعيين
+                            <button type="button" id="cancelEdit" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                إلغاء
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-
-            <!-- جدول عرض الطلبات -->
-            <div class="card">
-                <div class="p-4 md:p-6">
-                    <h2 class="text-xl font-bold mb-4">قائمة الطلبات</h2>
-                    
-                    <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-                        <!-- أزرار التصفية -->
-                        <div class="flex flex-wrap gap-2">
-                            <button id="filter-all" class="btn-primary">
-                                <i class="fas fa-list ml-2"></i>كل الطلبات
-                            </button>
-                            <button id="filter-pending" class="btn-secondary">
-                                <i class="fas fa-clock ml-2"></i>الطلبات المعلقة
-                            </button>
-                            <button id="filter-approved" class="btn-success">
-                                <i class="fas fa-check ml-2"></i>الطلبات المقبولة
-                            </button>
-                            <button id="filter-rejected" class="btn-danger">
-                                <i class="fas fa-times ml-2"></i>الطلبات المرفوضة
-                            </button>
-                            <button id="filter-delivered" class="btn-warning">
-                                <i class="fas fa-truck ml-2"></i>طلبات تم التسليم
-                            </button>
-                            <button id="filter-overdue" class="btn-danger">
-                                <i class="fas fa-exclamation-triangle ml-2"></i>طلبات متأخرة
-                            </button>
-                        </div>
-                        
-                        <!-- أزرار للإدارة -->
-                        <div class="flex flex-wrap gap-2">
-                            <button id="add-user-btn" class="btn-primary hidden">
-                                <i class="fas fa-user-plus ml-2"></i>إضافة مستخدم
-                            </button>
-                            <button id="print-btn" class="btn-secondary">
-                                <i class="fas fa-print ml-2"></i>طباعة
-                            </button>
-                            <button id="export-excel-btn" class="btn-secondary">
-                                <i class="fas fa-file-excel ml-2"></i>تصدير Excel
-                            </button>
-                            <button id="export-pdf-btn" class="btn-secondary">
-                                <i class="fas fa-file-pdf ml-2"></i>تصدير PDF
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- حقول البحث -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <div class="flex-1 min-w-[200px]">
-                            <label for="search-customer" class="block mb-2">البحث باسم العميل</label>
-                            <input type="text" id="search-customer" class="w-full p-3 rounded-md text-base" placeholder="اكتب اسم العميل...">
-                        </div>
-                        <div class="flex-1 min-w-[200px]">
-                            <label for="search-days" class="block mb-2">البحث بعدد الأيام المتبقية</label>
-                            <input type="number" id="search-days" class="w-full p-3 rounded-md text-base" placeholder="أقل من عدد أيام...">
-                        </div>
-                    </div>
-                    
-                    <!-- جدول الطلبات -->
-                    <div class="responsive-table">
-                        <table id="orders-table" class="w-full">
-                            <thead>
-                                <tr>
-                                    <th>اسم العميل</th>
-                                    <th>المقاس</th>
-                                    <th>اللون</th>
-                                    <th>الطباعة</th>
-                                    <th>بيد/بدون يد</th>
-                                    <th>العدد</th>
-                                    <th>شروط الدفع</th>
-                                    <th>تاريخ التسليم</th>
-                                    <th>الأيام المتبقية</th>
-                                    <th>حالة الطلب</th>
-                                    <th class="action-column">إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="print-container">
-                                <!-- سيتم إضافة الصفوف هنا عبر JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Modal إضافة مستخدم جديد -->
-    <div id="add-user-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="close-add-user">&times;</span>
-            <h2 class="text-xl font-bold mb-4">إضافة مستخدم جديد</h2>
-            <form id="add-user-form" class="space-y-4">
-                <div>
-                    <label for="new-user-name" class="block mb-2">اسم المستخدم</label>
-                    <input type="text" id="new-user-name" name="name" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <label for="new-user-email" class="block mb-2">البريد الإلكتروني</label>
-                    <input type="email" id="new-user-email" name="email" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <label for="new-user-password" class="block mb-2">كلمة المرور</label>
-                    <input type="password" id="new-user-password" name="password" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <label for="new-user-role" class="block mb-2">دور المستخدم</label>
-                    <select id="new-user-role" name="role" class="w-full p-3 rounded-md text-base" required>
-                        <option value="user">مستخدم</option>
-                        <option value="supervisor">مشرف موافقات</option>
-                        <option value="admin">مدير</option>
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" class="btn-primary w-full py-3">إضافة المستخدم</button>
-                </div>
-                <div id="add-user-error" class="text-red-500 text-center hidden"></div>
-            </form>
         </div>
     </div>
 
-    <!-- Modal عرض تفاصيل الطلب -->
-    <div id="view-order-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="close-view-order">&times;</span>
-            <h2 class="text-xl font-bold mb-4">تفاصيل الطلب</h2>
-            <div id="order-details" class="space-y-4">
-                <!-- سيتم إضافة التفاصيل هنا عبر JavaScript -->
+    <!-- Rejection Reason Modal -->
+    <div id="rejectReasonModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-800 dark:opacity-80"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                <div class="absolute top-0 right-0 pt-4 pr-4">
+                    <button type="button" id="closeRejectReasonModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">إغلاق</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:text-right">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                        سبب رفض الطلب
+                    </h3>
+                    <form id="rejectReasonForm" class="mt-4">
+                        <input type="hidden" id="rejectOrderId">
+                        <div class="mb-4">
+                            <label for="rejectReason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 text-right">سبب الرفض</label>
+                            <textarea id="rejectReason" rows="3" class="mt-1 focus:ring-primary focus:border-primary block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-base py-2 px-3" required></textarea>
+                        </div>
+                        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mr-3 sm:w-auto sm:text-sm">
+                                تأكيد الرفض
+                            </button>
+                            <button type="button" id="cancelReject" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal تعديل الطلب -->
-    <div id="edit-order-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="close-edit-order">&times;</span>
-            <h2 class="text-xl font-bold mb-4">تعديل الطلب</h2>
-            <form id="edit-order-form" class="space-y-4">
-                <input type="hidden" id="edit-order-id">
-                <div>
-                    <label for="edit-customer-name" class="block mb-2">اسم العميل</label>
-                    <input type="text" id="edit-customer-name" name="customerName" class="w-full p-3 rounded-md text-base" required>
+    <!-- Confirm Delete Modal -->
+    <div id="confirmDeleteModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-800 dark:opacity-80"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                <div class="mt-3 text-center sm:mt-0 sm:text-right">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                        تأكيد الحذف
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        هل أنت متأكد من رغبتك في حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.
+                    </p>
+                    <input type="hidden" id="deleteOrderId">
+                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="confirmDelete" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mr-3 sm:w-auto sm:text-sm">
+                            حذف
+                        </button>
+                        <button type="button" id="cancelDelete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                            إلغاء
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label for="edit-size" class="block mb-2">المقاس</label>
-                    <select id="edit-size" name="size" class="w-full p-3 rounded-md text-base" required>
-                        <option value="">اختر المقاس</option>
-                        <option value="بستلة 21">بستلة 21</option>
-                        <option value="بستلة 19">بستلة 19</option>
-                        <option value="بستلة 17.2">بستلة 17.2</option>
-                        <option value="بستلة 17">بستلة 17</option>
-                        <option value="بستلة 16">بستلة 16</option>
-                        <option value="بستلة 14">بستلة 14</option>
-                        <option value="بستلة 13">بستلة 13</option>
-                        <option value="بستلة 12">بستلة 12</option>
-                        <option value="بستلة 11">بستلة 11</option>
-                        <option value="بستلة 11.2">بستلة 11.2</option>
-                        <option value="بستلة 10">بستلة 10</option>
-                        <option value="بستلة 9">بستلة 9</option>
-                        <option value="بستلة 6">بستلة 6</option>
-                        <option value="بستلة 6.2">بستلة 6.2</option>
-                        <option value="بستلة 6.1">بستلة 6.1</option>
-                        <option value="بستلة 3.8">بستلة 3.8</option>
-                        <option value="بستلة 3.9">بستلة 3.9</option>
-                        <option value="بستلة 3.7">بستلة 3.7</option>
-                        <option value="بستلة 3">بستلة 3</option>
-                        <option value="بستلة 3.1">بستلة 3.1</option>
-                        <option value="بستلة 2.6">بستلة 2.6</option>
-                        <option value="عبوة 1.3">عبوة 1.3</option>
-                        <option value="عبوة 1.25">عبوة 1.25</option>
-                        <option value="عبوة كيلو">عبوة كيلو</option>
-                        <option value="عبوة 1 لتر">عبوة 1 لتر</option>
-                        <option value="عبوة 0.9 لتر">عبوة 0.9 لتر</option>
-                        <option value="عبوة 500 مللى">عبوة 500 مللى</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="edit-color" class="block mb-2">اللون</label>
-                    <select id="edit-color" name="color" class="w-full p-3 rounded-md text-base" required>
-                        <option value="">اختر اللون</option>
-                        <option value="ابيض">ابيض</option>
-                        <option value="شفاف">شفاف</option>
-                        <option value="هابى باك">هابى باك</option>
-                        <option value="سادة">سادة</option>
-                        <option value="مطبوع">مطبوع</option>
-                        <option value="هابى">هابى</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="edit-printing" class="block mb-2">الطباعة</label>
-                    <select id="edit-printing" name="printing" class="w-full p-3 rounded-md text-base" required>
-                        <option value="">اختر نوع الطباعة</option>
-                        <option value="سادة">سادة</option>
-                        <option value="حرارى">حرارى</option>
-                        <option value="سيلك سكرين">سيلك سكرين</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="edit-handle" class="block mb-2">بيد / بدون يد</label>
-                    <select id="edit-handle" name="handle" class="w-full p-3 rounded-md text-base" required>
-                        <option value="">اختر النوع</option>
-                        <option value="بيد">بيد</option>
-                        <option value="بدون يد">بدون يد</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="edit-quantity" class="block mb-2">العدد المطلوب</label>
-                    <input type="number" id="edit-quantity" name="quantity" min="1" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <label for="edit-payment-terms" class="block mb-2">شروط الدفع</label>
-                    <textarea id="edit-payment-terms" name="paymentTerms" class="w-full p-3 rounded-md text-base" rows="3" required></textarea>
-                </div>
-                <div>
-                    <label for="edit-delivery-date" class="block mb-2">تاريخ التسليم</label>
-                    <input type="date" id="edit-delivery-date" name="deliveryDate" class="w-full p-3 rounded-md text-base" required>
-                </div>
-                <div>
-                    <button type="submit" class="btn-primary w-full py-3">حفظ التعديلات</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Modal رفض الطلب -->
-    <div id="reject-order-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="close-reject-order">&times;</span>
-            <h2 class="text-xl font-bold mb-4">رفض الطلب</h2>
-            <form id="reject-order-form" class="space-y-4">
-                <input type="hidden" id="reject-order-id">
-                <div>
-                    <label for="reject-reason" class="block mb-2">سبب الرفض</label>
-                    <textarea id="reject-reason" name="rejectReason" class="w-full p-3 rounded-md text-base" rows="3" required></textarea>
-                </div>
-                <div>
-                    <button type="submit" class="btn-danger w-full py-3">تأكيد الرفض</button>
-                </div>
-            </form>
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-primary mb-4"></div>
+            <p class="text-gray-700 dark:text-gray-300">جار التحميل...</p>
         </div>
     </div>
 
     <script>
-        // تهيئة Dark Mode
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-
-        // تهيئة Firebase
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD8loT0jeGJFUxPsLzbD-ItHU2UbBxCCSU",
             authDomain: "plastic-app-3d2af.firebaseapp.com",
@@ -650,42 +718,1122 @@
             measurementId: "G-0108S3D9ML"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // متغيرات عامة
-        let currentUser = null;
-        let userRole = 'user'; // افتراضي: مستخدم عادي
-        let lastActivity = Date.now();
-        const inactivityTimeout = 10 * 60 * 1000; // 10 دقائق
+        // Telegram Configuration
         const TELEGRAM_TOKEN = "8132622542:AAF0nG25doWftQA1-RThLKKEb_HeAATVbOA";
         const CHAT_ID = "-4618423800";
 
-        // تفعيل مراقبة وقت الخمول
-        function setupInactivityMonitor() {
-            const resetTimer = () => {
-                lastActivity = Date.now();
-            };
-
-            // حدث عند أي نشاط
-            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(eventName => {
-                document.addEventListener(eventName, resetTimer, true);
-            });
-
-            // فحص الخمول كل دقيقة
-            setInterval(() => {
-                const now = Date.now();
-                if (now - lastActivity > inactivityTimeout && auth.currentUser) {
-                    console.log('تسجيل خروج تلقائي بسبب عدم النشاط');
-                    logout();
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Global Variables
+        let currentUser = null;
+        let userRole = "user"; // Default role is user
+        let ordersTable = null;
+        let inactivityTimer = null;
+        let logoutCountdown = null;
+        let logoutCountdownInterval = null;
+        
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        const loginForm = document.getElementById('loginForm');
+        const registerBtn = document.getElementById('registerBtn');
+        const registerModal = document.getElementById('registerModal');
+        const registerForm = document.getElementById('registerForm');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const cancelRegister = document.getElementById('cancelRegister');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const orderForm = document.getElementById('orderForm');
+        const resetFormBtn = document.getElementById('resetFormBtn');
+        const inactivityWarning = document.getElementById('inactivityWarning');
+        const logoutCountdownEl = document.getElementById('logoutCountdown');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Order Details Modal Elements
+        const orderDetailsModal = document.getElementById('orderDetailsModal');
+        const closeOrderDetailsModal = document.getElementById('closeOrderDetailsModal');
+        const orderDetailsContent = document.getElementById('orderDetailsContent');
+        
+        // Edit Order Modal Elements
+        const editOrderModal = document.getElementById('editOrderModal');
+        const closeEditOrderModal = document.getElementById('closeEditOrderModal');
+        const cancelEdit = document.getElementById('cancelEdit');
+        const editOrderForm = document.getElementById('editOrderForm');
+        
+        // Reject Reason Modal Elements
+        const rejectReasonModal = document.getElementById('rejectReasonModal');
+        const closeRejectReasonModal = document.getElementById('closeRejectReasonModal');
+        const cancelReject = document.getElementById('cancelReject');
+        const rejectReasonForm = document.getElementById('rejectReasonForm');
+        
+        // Confirm Delete Modal Elements
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        
+        // Table Filter Elements
+        const statusFilter = document.getElementById('statusFilter');
+        const daysFilter = document.getElementById('daysFilter');
+        
+        // Print and Export Buttons
+        const printTableBtn = document.getElementById('printTableBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication state
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    
+                    if (userDoc.exists) {
+                        userRole = userDoc.data().role || 'user';
+                        userName.textContent = userDoc.data().name || user.email;
+                    } else {
+                        // Create user document if it doesn't exist
+                        await db.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            name: user.displayName || '',
+                            role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        userRole = 'user';
+                        userName.textContent = user.displayName || user.email;
+                    }
+                    
+                    loginScreen.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    
+                    initializeOrdersTable();
+                    resetInactivityTimer();
+                } else {
+                    currentUser = null;
+                    mainApp.classList.add('hidden');
+                    loginScreen.classList.remove('hidden');
                 }
-            }, 60000);
-        }
-
-        // Telegram إرسال رسالة إلى
-        async function sendTelegramMessage(message) {
+            });
+            
+            // Login form submission
+            loginForm.addEventListener('submit', handleLogin);
+            
+            // Register button click
+            registerBtn.addEventListener('click', () => {
+                registerModal.classList.remove('hidden');
+            });
+            
+            // Close register modal
+            closeRegisterModal.addEventListener('click', () => {
+                registerModal.classList.add('hidden');
+            });
+            
+            // Cancel register
+            cancelRegister.addEventListener('click', () => {
+                registerModal.classList.add('hidden');
+            });
+            
+            // Register form submission
+            registerForm.addEventListener('submit', handleRegister);
+            
+            // Logout button click
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut();
+                clearInactivityTimer();
+            });
+            
+            // Order form submission
+            orderForm.addEventListener('submit', handleOrderSubmit);
+            
+            // Reset form button click
+            resetFormBtn.addEventListener('click', () => {
+                orderForm.reset();
+            });
+            
+            // Close order details modal
+            closeOrderDetailsModal.addEventListener('click', () => {
+                orderDetailsModal.classList.add('hidden');
+            });
+            
+            // Close edit order modal
+            closeEditOrderModal.addEventListener('click', () => {
+                editOrderModal.classList.add('hidden');
+            });
+            
+            // Cancel edit order
+            cancelEdit.addEventListener('click', () => {
+                editOrderModal.classList.add('hidden');
+            });
+            
+            // Edit order form submission
+            editOrderForm.addEventListener('submit', handleEditOrderSubmit);
+            
+            // Close reject reason modal
+            closeRejectReasonModal.addEventListener('click', () => {
+                rejectReasonModal.classList.add('hidden');
+            });
+            
+            // Cancel reject order
+            cancelReject.addEventListener('click', () => {
+                rejectReasonModal.classList.add('hidden');
+            });
+            
+            // Reject reason form submission
+            rejectReasonForm.addEventListener('submit', handleRejectOrder);
+            
+            // Cancel delete order
+            cancelDelete.addEventListener('click', () => {
+                confirmDeleteModal.classList.add('hidden');
+            });
+            
+            // Confirm delete order
+            confirmDelete.addEventListener('click', handleDeleteOrder);
+            
+            // Status filter change
+            statusFilter.addEventListener('change', () => {
+                if (ordersTable) {
+                    ordersTable.draw();
+                }
+                // Reset days filter when status filter changes
+                daysFilter.value = '';
+            });
+            
+            // Days filter change
+            daysFilter.addEventListener('input', () => {
+                if (ordersTable) {
+                    ordersTable.draw();
+                }
+                // Reset status filter when days filter changes
+                statusFilter.value = 'all';
+            });
+            
+            // Print table button click
+            printTableBtn.addEventListener('click', () => {
+                window.print();
+            });
+            
+            // Export PDF button click
+            exportPdfBtn.addEventListener('click', exportToPdf);
+            
+            // Export Excel button click
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            
+            // Setup inactivity detection
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('keydown', resetInactivityTimer);
+            document.addEventListener('click', resetInactivityTimer);
+            document.addEventListener('scroll', resetInactivityTimer);
+            document.addEventListener('touchstart', resetInactivityTimer);
+        });
+        
+        // Handle Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
+            
             try {
+                showLoading();
+                await auth.signInWithEmailAndPassword(email, password);
+                loginError.classList.add('hidden');
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                loginError.textContent = getAuthErrorMessage(error);
+                loginError.classList.remove('hidden');
+            }
+        }
+        
+        // Handle Register
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const regError = document.getElementById('regError');
+            
+            if (password !== confirmPassword) {
+                regError.textContent = 'كلمة المرور غير متطابقة';
+                regError.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                showLoading();
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Create user document in Firestore
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    email: email,
+                    name: name,
+                    role: 'user', // Default role is user
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Update user profile
+                await userCredential.user.updateProfile({
+                    displayName: name
+                });
+                
+                registerModal.classList.add('hidden');
+                regError.classList.add('hidden');
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                regError.textContent = getAuthErrorMessage(error);
+                regError.classList.remove('hidden');
+            }
+        }
+        
+        // Handle Order Submit
+        async function handleOrderSubmit(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            const formData = {
+                customerName: document.getElementById('customerName').value,
+                size: document.getElementById('size').value,
+                color: document.getElementById('color').value,
+                printType: document.getElementById('printType').value,
+                handle: document.getElementById('handle').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                deliveryDate: document.getElementById('deliveryDate').value,
+                paymentTerms: document.getElementById('paymentTerms').value,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    name: userName.textContent || currentUser.email
+                }
+            };
+            
+            try {
+                showLoading();
+                
+                // Add order to Firestore
+                const docRef = await db.collection('orders').add(formData);
+                
+                // Send Telegram notification
+                await sendTelegramNotification('new_order', {
+                    ...formData,
+                    id: docRef.id
+                });
+                
+                // Reset form
+                orderForm.reset();
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم إرسال الطلب بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error submitting order:', error);
+                alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Handle Edit Order Submit
+        async function handleEditOrderSubmit(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            const orderId = document.getElementById('editOrderId').value;
+            
+            const formData = {
+                customerName: document.getElementById('editCustomerName').value,
+                size: document.getElementById('editSize').value,
+                color: document.getElementById('editColor').value,
+                printType: document.getElementById('editPrintType').value,
+                handle: document.getElementById('editHandle').value,
+                quantity: parseInt(document.getElementById('editQuantity').value),
+                deliveryDate: document.getElementById('editDeliveryDate').value,
+                paymentTerms: document.getElementById('editPaymentTerms').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    name: userName.textContent || currentUser.email
+                }
+            };
+            
+            try {
+                showLoading();
+                
+                // Update order in Firestore
+                await db.collection('orders').doc(orderId).update(formData);
+                
+                // Close modal
+                editOrderModal.classList.add('hidden');
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم تحديث الطلب بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error updating order:', error);
+                alert('حدث خطأ أثناء تحديث الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Handle Reject Order
+        async function handleRejectOrder(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            const orderId = document.getElementById('rejectOrderId').value;
+            const rejectReason = document.getElementById('rejectReason').value;
+            
+            try {
+                showLoading();
+                
+                // Get order data
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (!orderDoc.exists) {
+                    throw new Error('Order not found');
+                }
+                
+                const orderData = orderDoc.data();
+                
+                // Update order in Firestore
+                await db.collection('orders').doc(orderId).update({
+                    status: 'rejected',
+                    rejectReason: rejectReason,
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    rejectedBy: {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        name: userName.textContent || currentUser.email
+                    }
+                });
+                
+                // Send Telegram notification
+                await sendTelegramNotification('reject_order', {
+                    ...orderData,
+                    id: orderId,
+                    rejectReason: rejectReason
+                });
+                
+                // Close modal
+                rejectReasonModal.classList.add('hidden');
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم رفض الطلب بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error rejecting order:', error);
+                alert('حدث خطأ أثناء رفض الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Handle Accept Order
+        async function handleAcceptOrder(orderId) {
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                // Get order data
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (!orderDoc.exists) {
+                    throw new Error('Order not found');
+                }
+                
+                const orderData = orderDoc.data();
+                
+                // Update order in Firestore
+                await db.collection('orders').doc(orderId).update({
+                    status: 'accepted',
+                    acceptedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    acceptedBy: {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        name: userName.textContent || currentUser.email
+                    }
+                });
+                
+                // Send Telegram notification
+                await sendTelegramNotification('accept_order', {
+                    ...orderData,
+                    id: orderId
+                });
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم قبول الطلب بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error accepting order:', error);
+                alert('حدث خطأ أثناء قبول الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Handle Delete Order
+        async function handleDeleteOrder() {
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            const orderId = document.getElementById('deleteOrderId').value;
+            
+            try {
+                showLoading();
+                
+                // Delete order from Firestore
+                await db.collection('orders').doc(orderId).delete();
+                
+                // Close modal
+                confirmDeleteModal.classList.add('hidden');
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم حذف الطلب بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error deleting order:', error);
+                alert('حدث خطأ أثناء حذف الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Handle Mark as Delivered
+        async function handleMarkAsDelivered(orderId) {
+            if (!currentUser) {
+                // Redirect to login
+                auth.signOut();
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                // Update order in Firestore
+                await db.collection('orders').doc(orderId).update({
+                    status: 'delivered',
+                    deliveredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    deliveredBy: {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        name: userName.textContent || currentUser.email
+                    }
+                });
+                
+                // Refresh table
+                ordersTable.ajax.reload();
+                
+                hideLoading();
+                
+                // Show success message
+                alert('تم تحديث حالة الطلب إلى "تم التسليم" بنجاح');
+            } catch (error) {
+                hideLoading();
+                console.error('Error marking order as delivered:', error);
+                alert('حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+        
+        // Initialize Orders Table
+        function initializeOrdersTable() {
+            // Custom filtering function for DataTables
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    // Skip filtering if no status filter is selected or if it's set to 'all'
+                    if (statusFilter.value === 'all' && daysFilter.value === '') {
+                        return true;
+                    }
+                    
+                    // Status filtering
+                    if (statusFilter.value !== 'all' && daysFilter.value === '') {
+                        const status = data[9]; // Status column
+                        
+                        if (statusFilter.value === 'pending' && !status.includes('معلق')) {
+                            return false;
+                        }
+                        if (statusFilter.value === 'accepted' && !status.includes('مقبول')) {
+                            return false;
+                        }
+                        if (statusFilter.value === 'rejected' && !status.includes('مرفوض')) {
+                            return false;
+                        }
+                        if (statusFilter.value === 'delivered' && !status.includes('تم التسليم')) {
+                            return false;
+                        }
+                        if (statusFilter.value === 'overdue' && !status.includes('تخطى موعد التسليم')) {
+                            return false;
+                        }
+                        if (statusFilter.value === 'today') {
+                            const today = new Date().toISOString().split('T')[0];
+                            const deliveryDate = data[7].split('/').reverse().join('-'); // Convert dd/mm/yyyy to yyyy-mm-dd
+                            return deliveryDate === today;
+                        }
+                    }
+                    
+                    // Days remaining filtering
+                    if (daysFilter.value !== '' && statusFilter.value === 'all') {
+                        const daysRemaining = parseInt(data[8]); // Days remaining column
+                        const filterDays = parseInt(daysFilter.value);
+                        
+                        return daysRemaining === filterDays;
+                    }
+                    
+                    return true;
+                }
+            );
+            
+            // Initialize DataTables
+            ordersTable = $('#ordersTable').DataTable({
+                ajax: {
+                    url: '#',
+                    type: 'GET',
+                    dataType: 'json',
+                    dataSrc: function() {
+                        return getOrdersData();
+                    }
+                },
+                columns: [
+                    { data: 'customerName' },
+                    { data: 'size' },
+                    { data: 'color' },
+                    { data: 'printType' },
+                    { data: 'handle' },
+                    { data: 'quantity' },
+                    { data: 'paymentTerms' },
+                    { 
+                        data: 'deliveryDate',
+                        render: function(data) {
+                            // Convert yyyy-mm-dd to dd/mm/yyyy
+                            const dateParts = data.split('-');
+                            return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                        }
+                    },
+                    { data: 'daysRemaining' },
+                    { 
+                        data: 'status',
+                        render: function(data, type, row) {
+                            let statusClass = '';
+                            let statusText = '';
+                            
+                            switch(data) {
+                                case 'pending':
+                                    statusClass = 'status-pending';
+                                    statusText = 'معلق';
+                                    break;
+                                case 'accepted':
+                                    statusClass = 'status-accepted';
+                                    statusText = 'مقبول';
+                                    break;
+                                case 'rejected':
+                                    statusClass = 'status-rejected';
+                                    statusText = 'مرفوض';
+                                    break;
+                                case 'delivered':
+                                    statusClass = 'status-delivered';
+                                    statusText = 'تم التسليم';
+                                    break;
+                                case 'overdue':
+                                    statusClass = 'status-overdue';
+                                    statusText = 'تخطى موعد التسليم';
+                                    break;
+                                default:
+                                    statusClass = 'status-pending';
+                                    statusText = 'معلق';
+                            }
+                            
+                            return `<span class="${statusClass}">${statusText}</span>`;
+                        }
+                    },
+                    { 
+                        data: 'id',
+                        className: 'actions-column',
+                        render: function(data, type, row) {
+                            let actions = `
+                                <div class="flex flex-wrap gap-2 justify-center status-actions">
+                                    <button onclick="showOrderDetails('${data}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                            `;
+                            
+                            // Add edit button for admin
+                            if (userRole === 'admin') {
+                                actions += `
+                                    <button onclick="showEditOrderModal('${data}')" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                `;
+                            }
+                            
+                            // Add delete button for admin
+                            if (userRole === 'admin') {
+                                actions += `
+                                    <button onclick="showDeleteConfirmation('${data}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                `;
+                            }
+                            
+                            // Add approve/reject buttons for admin and approver
+                            if ((userRole === 'admin' || userRole === 'approver') && row.status === 'pending') {
+                                actions += `
+                                    <button onclick="handleAcceptOrder('${data}')" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="showRejectReasonModal('${data}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                `;
+                            }
+                            
+                            // Add delivered checkbox for admin and approver
+                            if ((userRole === 'admin' || userRole === 'approver') && 
+                                (row.status === 'accepted' || row.status === 'overdue')) {
+                                actions += `
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="delivered-${data}" 
+                                            class="form-checkbox h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:border-gray-600"
+                                            onchange="handleMarkAsDelivered('${data}')"
+                                            ${row.status === 'delivered' ? 'checked' : ''}>
+                                        <label for="delivered-${data}" class="mr-2 block text-sm text-gray-900 dark:text-gray-300">تم التسليم</label>
+                                    </div>
+                                `;
+                            }
+                            
+                            actions += `</div>`;
+                            
+                            return actions;
+                        }
+                    }
+                ],
+                columnDefs: [
+                    { targets: [5, 8], className: 'text-center' },
+                    { targets: [6], className: 'truncate max-w-xs' },
+                    { targets: [9, 10], className: 'text-center' }
+                ],
+                order: [[8, 'asc']],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.1/i18n/ar.json'
+                },
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'pdfHtml5',
+                        text: 'تصدير PDF',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                        },
+                        orientation: 'landscape',
+                        customize: function(doc) {
+                            doc.defaultStyle.direction = 'rtl';
+                            doc.defaultStyle.font = 'Tajawal';
+                        }
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: 'تصدير Excel',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: 'طباعة',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                        },
+                        customize: function(win) {
+                            $(win.document.body).addClass('rtl');
+                        }
+                    }
+                ]
+            });
+            
+            // Hide buttons since we have custom buttons
+            $('.dt-buttons').hide();
+        }
+        
+        // Get Orders Data
+        async function getOrdersData() {
+            if (!currentUser) {
+                return [];
+            }
+            
+            try {
+                const ordersSnapshot = await db.collection('orders').get();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const orders = [];
+                
+                ordersSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const deliveryDate = new Date(data.deliveryDate);
+                    deliveryDate.setHours(0, 0, 0, 0);
+                    
+                    // Calculate days remaining
+                    const diffTime = deliveryDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Determine status
+                    let status = data.status || 'pending';
+                    
+                    // If delivered, keep status as delivered
+                    if (status === 'delivered') {
+                        // Keep as is
+                    }
+                    // If delivery date has passed and not delivered, mark as overdue
+                    else if (diffDays < 0 && status !== 'delivered') {
+                        status = 'overdue';
+                    }
+                    
+                    orders.push({
+                        id: doc.id,
+                        customerName: data.customerName || '',
+                        size: data.size || '',
+                        color: data.color || '',
+                        printType: data.printType || '',
+                        handle: data.handle || '',
+                        quantity: data.quantity || 0,
+                        paymentTerms: data.paymentTerms || '',
+                        deliveryDate: data.deliveryDate || '',
+                        daysRemaining: diffDays,
+                        status: status,
+                        createdBy: data.createdBy || {},
+                        createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+                        rejectReason: data.rejectReason || ''
+                    });
+                });
+                
+                return orders;
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                return [];
+            }
+        }
+        
+        // Show Order Details
+        window.showOrderDetails = async function(orderId) {
+            try {
+                showLoading();
+                
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (!orderDoc.exists) {
+                    throw new Error('Order not found');
+                }
+                
+                const data = orderDoc.data();
+                const deliveryDate = new Date(data.deliveryDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                deliveryDate.setHours(0, 0, 0, 0);
+                
+                // Calculate days remaining
+                const diffTime = deliveryDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // Format dates
+                const createdAtDate = data.createdAt ? data.createdAt.toDate() : new Date();
+                const formattedCreatedAt = `${createdAtDate.getDate()}/${createdAtDate.getMonth() + 1}/${createdAtDate.getFullYear()} ${createdAtDate.getHours()}:${createdAtDate.getMinutes().toString().padStart(2, '0')}`;
+                
+                // Format delivery date
+                const formattedDeliveryDate = `${deliveryDate.getDate()}/${deliveryDate.getMonth() + 1}/${deliveryDate.getFullYear()}`;
+                
+                let statusText = '';
+                let statusClass = '';
+                
+                // Determine status
+                let status = data.status || 'pending';
+                
+                // If delivered, keep status as delivered
+                if (status === 'delivered') {
+                    statusText = 'تم التسليم';
+                    statusClass = 'status-delivered';
+                }
+                // If delivery date has passed and not delivered, mark as overdue
+                else if (diffDays < 0 && status !== 'delivered') {
+                    statusText = 'تخطى موعد التسليم';
+                    statusClass = 'status-overdue';
+                }
+                else if (status === 'pending') {
+                    statusText = 'معلق';
+                    statusClass = 'status-pending';
+                }
+                else if (status === 'accepted') {
+                    statusText = 'مقبول';
+                    statusClass = 'status-accepted';
+                }
+                else if (status === 'rejected') {
+                    statusText = 'مرفوض';
+                    statusClass = 'status-rejected';
+                }
+                
+                let detailsHTML = `
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="border-b dark:border-gray-700 pb-2">
+                            <h4 class="font-bold text-gray-700 dark:text-gray-300">بيانات الطلب</h4>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">اسم العميل:</p>
+                                    <p class="font-medium">${data.customerName || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">المقاس:</p>
+                                    <p class="font-medium">${data.size || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">اللون:</p>
+                                    <p class="font-medium">${data.color || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">الطباعة:</p>
+                                    <p class="font-medium">${data.printType || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">بيد/بدون يد:</p>
+                                    <p class="font-medium">${data.handle || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">العدد المطلوب:</p>
+                                    <p class="font-medium">${data.quantity || '0'}</p>
+                                </div>
+                                <div class="col-span-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">شروط الدفع:</p>
+                                    <p class="font-medium">${data.paymentTerms || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">تاريخ التسليم:</p>
+                                    <p class="font-medium">${formattedDeliveryDate}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">الأيام المتبقية:</p>
+                                    <p class="font-medium">${diffDays}</p>
+                                </div>
+                                <div class="col-span-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">حالة الطلب:</p>
+                                    <p class="font-medium"><span class="${statusClass}">${statusText}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-b dark:border-gray-700 pb-2">
+                            <h4 class="font-bold text-gray-700 dark:text-gray-300">بيانات المستخدم</h4>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">اسم المستخدم:</p>
+                                    <p class="font-medium">${data.createdBy?.name || data.createdBy?.email || ''}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">البريد الإلكتروني:</p>
+                                    <p class="font-medium">${data.createdBy?.email || ''}</p>
+                                </div>
+                                <div class="col-span-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">تاريخ ووقت التسجيل:</p>
+                                    <p class="font-medium">${formattedCreatedAt}</p>
+                                </div>
+                            </div>
+                        </div>
+                `;
+                
+                // If rejected, show reject reason
+                if (status === 'rejected' && data.rejectReason) {
+                    detailsHTML += `
+                        <div>
+                            <h4 class="font-bold text-gray-700 dark:text-gray-300">سبب الرفض</h4>
+                            <p class="mt-1">${data.rejectReason}</p>
+                        </div>
+                    `;
+                }
+                
+                detailsHTML += `</div>`;
+                
+                orderDetailsContent.innerHTML = detailsHTML;
+                orderDetailsModal.classList.remove('hidden');
+                
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                console.error('Error fetching order details:', error);
+                alert('حدث خطأ أثناء عرض تفاصيل الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        };
+        
+        // Show Edit Order Modal
+        window.showEditOrderModal = async function(orderId) {
+            try {
+                showLoading();
+                
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (!orderDoc.exists) {
+                    throw new Error('Order not found');
+                }
+                
+                const data = orderDoc.data();
+                
+                document.getElementById('editOrderId').value = orderId;
+                document.getElementById('editCustomerName').value = data.customerName || '';
+                document.getElementById('editSize').value = data.size || '';
+                document.getElementById('editColor').value = data.color || '';
+                document.getElementById('editPrintType').value = data.printType || '';
+                document.getElementById('editHandle').value = data.handle || '';
+                document.getElementById('editQuantity').value = data.quantity || '';
+                document.getElementById('editDeliveryDate').value = data.deliveryDate || '';
+                document.getElementById('editPaymentTerms').value = data.paymentTerms || '';
+                
+                editOrderModal.classList.remove('hidden');
+                
+                hideLoading();
+            } catch (error) {
+                hideLoading();
+                console.error('Error loading order for edit:', error);
+                alert('حدث خطأ أثناء تحميل بيانات الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        };
+        
+        // Show Reject Reason Modal
+        window.showRejectReasonModal = function(orderId) {
+            document.getElementById('rejectOrderId').value = orderId;
+            document.getElementById('rejectReason').value = '';
+            rejectReasonModal.classList.remove('hidden');
+        };
+        
+        // Show Delete Confirmation
+        window.showDeleteConfirmation = function(orderId) {
+            document.getElementById('deleteOrderId').value = orderId;
+            confirmDeleteModal.classList.remove('hidden');
+        };
+        
+        // Send Telegram Notification
+        async function sendTelegramNotification(type, data) {
+            try {
+                const today = new Date();
+                const formattedToday = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+                
+                let message = '';
+                
+                if (type === 'new_order') {
+                    message = `🆕 *طلب جديد*\n\n`;
+                    message += `*بيانات الطلب:*\n`;
+                    message += `- اسم العميل: ${data.customerName}\n`;
+                    message += `- المقاس: ${data.size}\n`;
+                    message += `- اللون: ${data.color}\n`;
+                    message += `- الطباعة: ${data.printType}\n`;
+                    message += `- بيد/بدون يد: ${data.handle}\n`;
+                    message += `- العدد المطلوب: ${data.quantity}\n`;
+                    message += `- شروط الدفع: ${data.paymentTerms}\n`;
+                    
+                    // Format delivery date
+                    const deliveryDate = new Date(data.deliveryDate);
+                    const formattedDeliveryDate = `${deliveryDate.getDate()}/${deliveryDate.getMonth() + 1}/${deliveryDate.getFullYear()}`;
+                    message += `- تاريخ التسليم: ${formattedDeliveryDate}\n`;
+                    
+                    // Calculate days remaining
+                    const diffTime = deliveryDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    message += `- الأيام المتبقية: ${diffDays}\n\n`;
+                    
+                    message += `*بيانات المستخدم:*\n`;
+                    message += `- اسم المستخدم: ${data.createdBy.name || data.createdBy.email}\n`;
+                    message += `- البريد الإلكتروني: ${data.createdBy.email}\n`;
+                    message += `- تاريخ التسجيل: ${formattedToday}\n`;
+                }
+                else if (type === 'accept_order') {
+                    message = `✅ *تمت الموافقة على الطلب*\n\n`;
+                    message += `*بيانات الطلب:*\n`;
+                    message += `- اسم العميل: ${data.customerName}\n`;
+                    message += `- المقاس: ${data.size}\n`;
+                    message += `- اللون: ${data.color}\n`;
+                    message += `- الطباعة: ${data.printType}\n`;
+                    message += `- بيد/بدون يد: ${data.handle}\n`;
+                    message += `- العدد المطلوب: ${data.quantity}\n`;
+                    message += `- شروط الدفع: ${data.paymentTerms}\n`;
+                    
+                    // Format delivery date
+                    const deliveryDate = new Date(data.deliveryDate);
+                    const formattedDeliveryDate = `${deliveryDate.getDate()}/${deliveryDate.getMonth() + 1}/${deliveryDate.getFullYear()}`;
+                    message += `- تاريخ التسليم: ${formattedDeliveryDate}\n`;
+                    
+                    // Calculate days remaining
+                    const diffTime = deliveryDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    message += `- الأيام المتبقية: ${diffDays}\n\n`;
+                    
+                    message += `*تمت الموافقة بواسطة:*\n`;
+                    message += `- الاسم: ${currentUser.displayName || currentUser.email}\n`;
+                    message += `- البريد الإلكتروني: ${currentUser.email}\n`;
+                    message += `- تاريخ الموافقة: ${formattedToday}\n`;
+                }
+                else if (type === 'reject_order') {
+                    message = `❌ *تم رفض الطلب*\n\n`;
+                    message += `*بيانات الطلب:*\n`;
+                    message += `- اسم العميل: ${data.customerName}\n`;
+                    message += `- المقاس: ${data.size}\n`;
+                    message += `- اللون: ${data.color}\n`;
+                    message += `- الطباعة: ${data.printType}\n`;
+                    message += `- بيد/بدون يد: ${data.handle}\n`;
+                    message += `- العدد المطلوب: ${data.quantity}\n`;
+                    message += `- شروط الدفع: ${data.paymentTerms}\n`;
+                    
+                    // Format delivery date
+                    const deliveryDate = new Date(data.deliveryDate);
+                    const formattedDeliveryDate = `${deliveryDate.getDate()}/${deliveryDate.getMonth() + 1}/${deliveryDate.getFullYear()}`;
+                    message += `- تاريخ التسليم: ${formattedDeliveryDate}\n\n`;
+                    
+                    message += `*سبب الرفض:*\n${data.rejectReason}\n\n`;
+                    
+                    message += `*تم الرفض بواسطة:*\n`;
+                    message += `- الاسم: ${currentUser.displayName || currentUser.email}\n`;
+                    message += `- البريد الإلكتروني: ${currentUser.email}\n`;
+                    message += `- تاريخ الرفض: ${formattedToday}\n`;
+                }
+                
+                // Send notification to Telegram bot
                 const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: {
@@ -694,1187 +1842,217 @@
                     body: JSON.stringify({
                         chat_id: CHAT_ID,
                         text: message,
-                        parse_mode: 'HTML'
+                        parse_mode: 'Markdown'
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error('فشل في إرسال رسالة Telegram');
+                const responseData = await response.json();
+                
+                if (!responseData.ok) {
+                    console.error('Telegram API error:', responseData);
+                    throw new Error('Failed to send Telegram notification');
                 }
                 
-                return await response.json();
+                return true;
             } catch (error) {
-                console.error('خطأ في إرسال إشعار Telegram:', error);
-                return null;
+                console.error('Error sending Telegram notification:', error);
+                return false;
             }
         }
-
-        // تسجيل الدخول
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        
+        // Export to PDF
+        function exportToPdf() {
+            if (!ordersTable) return;
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('login-btn');
-            const loginBtnText = document.getElementById('login-btn-text');
-            const loginLoader = document.getElementById('login-loader');
-            const loginError = document.getElementById('login-error');
+            const pdf = new jsPDF('landscape');
             
-            // عرض حالة التحميل
-            loginBtnText.classList.add('hidden');
-            loginLoader.classList.remove('hidden');
-            loginBtn.disabled = true;
-            loginError.classList.add('hidden');
+            // Get filtered data
+            const filteredData = ordersTable.rows({ search: 'applied' }).data().toArray();
             
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                currentUser = userCredential.user;
-                
-                // جلب معلومات المستخدم من Firestore
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    userRole = userData.role || 'user';
-                    document.getElementById('user-info').textContent = `${userData.name || email} (${getArabicRole(userRole)})`;
-                } else {
-                    // إذا لم يكن هناك وثيقة مستخدم، قم بإنشاء واحدة
-                    await db.collection('users').doc(currentUser.uid).set({
-                        email: email,
-                        name: email.split('@')[0],
-                        role: 'user',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    userRole = 'user';
-                    document.getElementById('user-info').textContent = `${email.split('@')[0]} (مستخدم)`;
-                }
-                
-                // عرض واجهة التطبيق وإخفاء نموذج تسجيل الدخول
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                
-                // تطبيق صلاحيات المستخدم
-                applyUserPermissions();
-                
-                // تحميل الطلبات
-                loadOrders();
-                
-                // بدء مراقبة الخمول
-                setupInactivityMonitor();
-                
-            } catch (error) {
-                console.error('خطأ في تسجيل الدخول:', error);
-                loginError.textContent = 'خطأ في تسجيل الدخول: ' + error.message;
-                loginError.classList.remove('hidden');
-            } finally {
-                // إعادة تعيين زر تسجيل الدخول
-                loginBtnText.classList.remove('hidden');
-                loginLoader.classList.add('hidden');
-                loginBtn.disabled = false;
-            }
-        });
-
-        // تسجيل الخروج
-        function logout() {
-            auth.signOut().then(() => {
-                document.getElementById('app-container').classList.add('hidden');
-                document.getElementById('login-container').classList.remove('hidden');
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
-                document.getElementById('login-error').classList.add('hidden');
-                currentUser = null;
-                userRole = 'user';
-            }).catch((error) => {
-                console.error('خطأ في تسجيل الخروج:', error);
+            // Define columns to export
+            const columns = [
+                { header: 'اسم العميل', dataKey: 'customerName' },
+                { header: 'المقاس', dataKey: 'size' },
+                { header: 'اللون', dataKey: 'color' },
+                { header: 'الطباعة', dataKey: 'printType' },
+                { header: 'بيد/بدون يد', dataKey: 'handle' },
+                { header: 'العدد المطلوب', dataKey: 'quantity' },
+                { header: 'شروط الدفع', dataKey: 'paymentTerms' },
+                { header: 'تاريخ التسليم', dataKey: 'deliveryDate' },
+                { header: 'الأيام المتبقية', dataKey: 'daysRemaining' },
+                { header: 'حالة الطلب', dataKey: 'status' }
+            ];
+            
+            // Convert status to readable text
+            const formattedData = filteredData.map(order => ({
+                customerName: order.customerName,
+                size: order.size,
+                color: order.color,
+                printType: order.printType,
+                handle: order.handle,
+                quantity: order.quantity,
+                paymentTerms: order.paymentTerms,
+                deliveryDate: order.deliveryDate,
+                daysRemaining: order.daysRemaining,
+                status: getStatusText(order.status)
+            }));
+            
+            // Add title
+            pdf.setFont('Helvetica', 'bold');
+            pdf.setFontSize(18);
+            pdf.text('طلبات عبوات البلاستيك', pdf.internal.pageSize.width / 2, 20, { align: 'center' });
+            
+            // Generate table
+            pdf.autoTable({
+                columns: columns,
+                body: formattedData,
+                startY: 30,
+                styles: {
+                    font: 'Helvetica',
+                    fontSize: 10
+                },
+                headStyles: {
+                    fillColor: [93, 92, 222],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                },
+                margin: { top: 30, right: 10, bottom: 10, left: 10 }
             });
+            
+            // Save PDF
+            pdf.save('طلبات-عبوات-البلاستيك.pdf');
         }
-
-        document.getElementById('logout-btn').addEventListener('click', logout);
-
-        // تطبيق صلاحيات المستخدم
-        function applyUserPermissions() {
-            // إظهار/إخفاء زر إضافة مستخدم (للمدير فقط)
-            if (userRole === 'admin') {
-                document.getElementById('add-user-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('add-user-btn').classList.add('hidden');
-            }
+        
+        // Export to Excel
+        function exportToExcel() {
+            if (!ordersTable) return;
+            
+            // Get filtered data
+            const filteredData = ordersTable.rows({ search: 'applied' }).data().toArray();
+            
+            // Convert data to Excel format
+            const excelData = filteredData.map(order => ({
+                'اسم العميل': order.customerName,
+                'المقاس': order.size,
+                'اللون': order.color,
+                'الطباعة': order.printType,
+                'بيد/بدون يد': order.handle,
+                'العدد المطلوب': order.quantity,
+                'شروط الدفع': order.paymentTerms,
+                'تاريخ التسليم': order.deliveryDate,
+                'الأيام المتبقية': order.daysRemaining,
+                'حالة الطلب': getStatusText(order.status)
+            }));
+            
+            // Convert to worksheet
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Create workbook and add worksheet
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'طلبات عبوات البلاستيك');
+            
+            // Save Excel file
+            XLSX.writeFile(workbook, 'طلبات-عبوات-البلاستيك.xlsx');
         }
-
-        // الحصول على اسم الدور بالعربية
-        function getArabicRole(role) {
-            switch(role) {
-                case 'admin': return 'مدير';
-                case 'supervisor': return 'مشرف موافقات';
-                case 'user': return 'مستخدم';
-                default: return role;
-            }
-        }
-
-        // إضافة طلب جديد
-        document.getElementById('order-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!currentUser) {
-                alert('يجب تسجيل الدخول أولاً');
-                return;
-            }
-            
-            const form = e.target;
-            const customerName = form.customerName.value;
-            const size = form.size.value;
-            const color = form.color.value;
-            const printing = form.printing.value;
-            const handle = form.handle.value;
-            const quantity = form.quantity.value;
-            const paymentTerms = form.paymentTerms.value;
-            const deliveryDate = form.deliveryDate.value;
-            
-            // حساب الأيام المتبقية
-            const today = new Date();
-            const dueDate = new Date(deliveryDate);
-            const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-            
-            try {
-                const submitBtn = document.getElementById('submit-order');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<div class="loader mx-auto"></div>';
-                submitBtn.disabled = true;
-                
-                // جلب بيانات المستخدم
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const userData = userDoc.data();
-                
-                // إنشاء كائن الطلب
-                const orderData = {
-                    customerName,
-                    size,
-                    color,
-                    printing,
-                    handle,
-                    quantity: parseInt(quantity),
-                    paymentTerms,
-                    deliveryDate,
-                    daysLeft,
-                    status: 'pending', // معلق
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    createdBy: {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        name: userData?.name || currentUser.email
-                    }
-                };
-                
-                // حفظ الطلب في Firestore
-                const orderRef = await db.collection('orders').add(orderData);
-                
-                // إرسال إشعار Telegram
-                const message = `
-<b>🆕 طلب جديد</b>
-<b>كود الطلب:</b> ${orderRef.id}
-<b>اسم العميل:</b> ${customerName}
-<b>المقاس:</b> ${size}
-<b>اللون:</b> ${color}
-<b>الطباعة:</b> ${printing}
-<b>بيد/بدون يد:</b> ${handle}
-<b>العدد المطلوب:</b> ${quantity}
-<b>شروط الدفع:</b> ${paymentTerms}
-<b>تاريخ التسليم:</b> ${deliveryDate}
-<b>الأيام المتبقية:</b> ${daysLeft}
-<b>تم التسجيل بواسطة:</b> ${userData?.name || currentUser.email}
-`;
-                await sendTelegramMessage(message);
-                
-                // إعادة تعيين النموذج
-                form.reset();
-                
-                // عرض رسالة نجاح
-                alert('تم إرسال الطلب بنجاح!');
-                
-                // إعادة تحميل الطلبات
-                loadOrders();
-                
-            } catch (error) {
-                console.error('خطأ في إرسال الطلب:', error);
-                alert('حدث خطأ أثناء إرسال الطلب: ' + error.message);
-            } finally {
-                const submitBtn = document.getElementById('submit-order');
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane ml-2"></i>إرسال الطلب';
-                submitBtn.disabled = false;
-            }
-        });
-
-        // تحميل الطلبات من Firestore
-        async function loadOrders() {
-            if (!currentUser) return;
-            
-            try {
-                const ordersTableBody = document.getElementById('orders-table-body');
-                ordersTableBody.innerHTML = '<tr><td colspan="11" class="text-center py-4"><div class="loader mx-auto"></div></td></tr>';
-                
-                const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
-                
-                // تحديث حالة الطلبات المتأخرة
-                const batch = db.batch();
-                const today = new Date();
-                
-                // مصفوفة لتخزين الطلبات
-                const orders = [];
-                
-                snapshot.forEach(doc => {
-                    const order = { id: doc.id, ...doc.data() };
-                    
-                    // تحديث الأيام المتبقية
-                    if (order.deliveryDate) {
-                        const dueDate = new Date(order.deliveryDate);
-                        const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-                        order.daysLeft = daysLeft;
-                        
-                        // تحديث حالة الطلب إذا تجاوز موعد التسليم والحالة ليست "تم التسليم"
-                        if (daysLeft < 0 && order.status !== 'delivered') {
-                            order.status = 'overdue';
-                            const orderRef = db.collection('orders').doc(doc.id);
-                            batch.update(orderRef, { 
-                                daysLeft: daysLeft,
-                                status: 'overdue'
-                            });
-                        } else if (order.status !== 'rejected' && order.status !== 'delivered') {
-                            // تحديث الأيام المتبقية فقط
-                            const orderRef = db.collection('orders').doc(doc.id);
-                            batch.update(orderRef, { daysLeft: daysLeft });
-                        }
-                    }
-                    
-                    orders.push(order);
-                });
-                
-                // تنفيذ التحديثات
-                await batch.commit();
-                
-                // عرض الطلبات
-                displayOrders(orders);
-                
-            } catch (error) {
-                console.error('خطأ في تحميل الطلبات:', error);
-                document.getElementById('orders-table-body').innerHTML = 
-                    '<tr><td colspan="11" class="text-center py-4 text-red-500">حدث خطأ أثناء تحميل البيانات</td></tr>';
+        
+        // Get Status Text
+        function getStatusText(status) {
+            switch(status) {
+                case 'pending': return 'معلق';
+                case 'accepted': return 'مقبول';
+                case 'rejected': return 'مرفوض';
+                case 'delivered': return 'تم التسليم';
+                case 'overdue': return 'تخطى موعد التسليم';
+                default: return 'معلق';
             }
         }
-
-        // عرض الطلبات في الجدول
-        function displayOrders(orders) {
-            const ordersTableBody = document.getElementById('orders-table-body');
-            
-            if (orders.length === 0) {
-                ordersTableBody.innerHTML = '<tr><td colspan="11" class="text-center py-4">لا توجد طلبات</td></tr>';
-                return;
+        
+        // Get Authentication Error Message
+        function getAuthErrorMessage(error) {
+            switch(error.code) {
+                case 'auth/invalid-email':
+                    return 'البريد الإلكتروني غير صحيح';
+                case 'auth/user-disabled':
+                    return 'تم تعطيل هذا الحساب';
+                case 'auth/user-not-found':
+                    return 'البريد الإلكتروني غير مسجل';
+                case 'auth/wrong-password':
+                    return 'كلمة المرور غير صحيحة';
+                case 'auth/email-already-in-use':
+                    return 'البريد الإلكتروني مستخدم بالفعل';
+                case 'auth/weak-password':
+                    return 'كلمة المرور ضعيفة جدًا';
+                default:
+                    return error.message;
             }
-            
-            ordersTableBody.innerHTML = '';
-            
-            orders.forEach(order => {
-                const tr = document.createElement('tr');
-                
-                // تنسيق حالة الطلب
-                let statusText = '';
-                let statusClass = '';
-                
-                switch(order.status) {
-                    case 'pending':
-                        statusText = 'معلق';
-                        statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-                        break;
-                    case 'approved':
-                        statusText = 'مقبول';
-                        statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-                        break;
-                    case 'rejected':
-                        statusText = 'مرفوض';
-                        statusClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-                        break;
-                    case 'delivered':
-                        statusText = 'تم التسليم';
-                        statusClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-                        break;
-                    case 'overdue':
-                        statusText = 'تأخر التسليم';
-                        statusClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-                        break;
-                }
-                
-                // تنسيق تاريخ التسليم
-                let formattedDate = '';
-                if (order.deliveryDate) {
-                    const dateParts = order.deliveryDate.split('-');
-                    formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                }
-                
-                // تنسيق الأيام المتبقية
-                let daysLeftText = order.daysLeft;
-                let daysLeftClass = '';
-                
-                if (order.daysLeft < 0) {
-                    daysLeftText = `متأخر بـ ${Math.abs(order.daysLeft)} يوم`;
-                    daysLeftClass = 'text-red-600 dark:text-red-400 font-bold';
-                } else if (order.daysLeft === 0) {
-                    daysLeftText = 'اليوم';
-                    daysLeftClass = 'text-yellow-600 dark:text-yellow-400 font-bold';
-                } else if (order.daysLeft <= 3) {
-                    daysLeftText = `${order.daysLeft} أيام`;
-                    daysLeftClass = 'text-yellow-600 dark:text-yellow-400';
-                } else {
-                    daysLeftText = `${order.daysLeft} يوم`;
-                }
-                
-                if (order.status === 'delivered') {
-                    daysLeftText = 'تم التسليم';
-                    daysLeftClass = 'text-green-600 dark:text-green-400';
-                }
-                
-                // إنشاء صف الجدول
-                tr.innerHTML = `
-                    <td>${order.customerName}</td>
-                    <td>${order.size}</td>
-                    <td>${order.color}</td>
-                    <td>${order.printing}</td>
-                    <td>${order.handle}</td>
-                    <td>${order.quantity}</td>
-                    <td>${order.paymentTerms}</td>
-                    <td>${formattedDate}</td>
-                    <td class="${daysLeftClass}">${daysLeftText}</td>
-                    <td><span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span></td>
-                    <td class="action-column">
-                        <div class="flex space-x-1 space-x-reverse">
-                            <button class="view-order text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-id="${order.id}">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            ${userRole !== 'user' ? `
-                                ${userRole === 'admin' ? `
-                                    <button class="edit-order text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300" data-id="${order.id}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="delete-order text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300" data-id="${order.id}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                ` : ''}
-                                ${order.status === 'pending' ? `
-                                    <button class="approve-order text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300" data-id="${order.id}">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="reject-order text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300" data-id="${order.id}">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                ` : ''}
-                                ${(order.status === 'approved' || order.status === 'overdue') && !order.delivered ? `
-                                    <label class="flex items-center space-x-2 space-x-reverse">
-                                        <input type="checkbox" class="deliver-order form-checkbox h-4 w-4 text-green-600" data-id="${order.id}">
-                                        <span>تم التسليم</span>
-                                    </label>
-                                ` : ''}
-                            ` : ''}
-                        </div>
-                    </td>
-                `;
-                
-                ordersTableBody.appendChild(tr);
-            });
-            
-            // تفعيل أزرار الإجراءات
-            setupActionButtons();
         }
-
-        // تفعيل أزرار الإجراءات
-        function setupActionButtons() {
-            // عرض تفاصيل الطلب
-            document.querySelectorAll('.view-order').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const orderId = btn.getAttribute('data-id');
-                    try {
-                        const doc = await db.collection('orders').doc(orderId).get();
-                        if (doc.exists) {
-                            const order = doc.data();
-                            
-                            // تنسيق التاريخ
-                            let formattedDate = '';
-                            if (order.deliveryDate) {
-                                const dateParts = order.deliveryDate.split('-');
-                                formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                            }
-                            
-                            // تنسيق حالة الطلب
-                            let statusText = '';
-                            switch(order.status) {
-                                case 'pending': statusText = 'معلق'; break;
-                                case 'approved': statusText = 'مقبول'; break;
-                                case 'rejected': statusText = 'مرفوض'; break;
-                                case 'delivered': statusText = 'تم التسليم'; break;
-                                case 'overdue': statusText = 'تأخر التسليم'; break;
-                            }
-                            
-                            // تنسيق وقت الإنشاء
-                            let createdAtText = '';
-                            if (order.createdAt) {
-                                const createdDate = order.createdAt.toDate();
-                                createdAtText = createdDate.toLocaleString('ar-EG');
-                            }
-                            
-                            // عرض التفاصيل
-                            const orderDetails = document.getElementById('order-details');
-                            orderDetails.innerHTML = `
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h3 class="font-bold">اسم العميل</h3>
-                                        <p>${order.customerName}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">المقاس</h3>
-                                        <p>${order.size}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">اللون</h3>
-                                        <p>${order.color}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">الطباعة</h3>
-                                        <p>${order.printing}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">بيد/بدون يد</h3>
-                                        <p>${order.handle}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">العدد المطلوب</h3>
-                                        <p>${order.quantity}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">تاريخ التسليم</h3>
-                                        <p>${formattedDate}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">حالة الطلب</h3>
-                                        <p>${statusText}</p>
-                                    </div>
-                                    ${order.rejectReason ? `
-                                        <div class="md:col-span-2">
-                                            <h3 class="font-bold">سبب الرفض</h3>
-                                            <p>${order.rejectReason}</p>
-                                        </div>
-                                    ` : ''}
-                                    <div class="md:col-span-2">
-                                        <h3 class="font-bold">شروط الدفع</h3>
-                                        <p>${order.paymentTerms}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">تم الإنشاء بواسطة</h3>
-                                        <p>${order.createdBy?.name || order.createdBy?.email || '-'}</p>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold">تاريخ الإنشاء</h3>
-                                        <p>${createdAtText}</p>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            // عرض النافذة المنبثقة
-                            document.getElementById('view-order-modal').style.display = 'block';
-                        } else {
-                            alert('لم يتم العثور على الطلب!');
-                        }
-                    } catch (error) {
-                        console.error('خطأ في جلب تفاصيل الطلب:', error);
-                        alert('حدث خطأ أثناء جلب تفاصيل الطلب: ' + error.message);
-                    }
-                });
-            });
+        
+        // Inactivity Timer Functions
+        function resetInactivityTimer() {
+            // Reset any existing timer
+            clearInactivityTimer();
             
-            // تعديل الطلب (للمدير فقط)
-            document.querySelectorAll('.edit-order').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const orderId = btn.getAttribute('data-id');
-                    try {
-                        const doc = await db.collection('orders').doc(orderId).get();
-                        if (doc.exists) {
-                            const order = doc.data();
-                            
-                            // تعبئة نموذج التعديل
-                            document.getElementById('edit-order-id').value = orderId;
-                            document.getElementById('edit-customer-name').value = order.customerName;
-                            document.getElementById('edit-size').value = order.size;
-                            document.getElementById('edit-color').value = order.color;
-                            document.getElementById('edit-printing').value = order.printing;
-                            document.getElementById('edit-handle').value = order.handle;
-                            document.getElementById('edit-quantity').value = order.quantity;
-                            document.getElementById('edit-payment-terms').value = order.paymentTerms;
-                            document.getElementById('edit-delivery-date').value = order.deliveryDate;
-                            
-                            // عرض النافذة المنبثقة
-                            document.getElementById('edit-order-modal').style.display = 'block';
-                        } else {
-                            alert('لم يتم العثور على الطلب!');
-                        }
-                    } catch (error) {
-                        console.error('خطأ في جلب بيانات الطلب للتعديل:', error);
-                        alert('حدث خطأ أثناء جلب بيانات الطلب: ' + error.message);
-                    }
-                });
-            });
+            // Set a new timer
+            inactivityTimer = setTimeout(showLogoutWarning, 4 * 60 * 1000); // 4 minutes
             
-            // حذف الطلب (للمدير فقط)
-            document.querySelectorAll('.delete-order').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-                        const orderId = btn.getAttribute('data-id');
-                        try {
-                            await db.collection('orders').doc(orderId).delete();
-                            alert('تم حذف الطلب بنجاح');
-                            loadOrders();
-                        } catch (error) {
-                            console.error('خطأ في حذف الطلب:', error);
-                            alert('حدث خطأ أثناء حذف الطلب: ' + error.message);
-                        }
-                    }
-                });
-            });
-            
-            // الموافقة على الطلب
-            document.querySelectorAll('.approve-order').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (confirm('هل تريد الموافقة على هذا الطلب؟')) {
-                        const orderId = btn.getAttribute('data-id');
-                        try {
-                            // جلب بيانات الطلب
-                            const doc = await db.collection('orders').doc(orderId).get();
-                            if (!doc.exists) {
-                                alert('لم يتم العثور على الطلب!');
-                                return;
-                            }
-                            
-                            const order = doc.data();
-                            
-                            // تحديث حالة الطلب
-                            await db.collection('orders').doc(orderId).update({
-                                status: 'approved',
-                                approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                approvedBy: {
-                                    uid: currentUser.uid,
-                                    email: currentUser.email,
-                                    name: (await db.collection('users').doc(currentUser.uid).get()).data()?.name || currentUser.email
-                                }
-                            });
-                            
-                            // إرسال إشعار Telegram
-                            const message = `
-<b>✅ تمت الموافقة على طلب</b>
-<b>كود الطلب:</b> ${orderId}
-<b>اسم العميل:</b> ${order.customerName}
-<b>المقاس:</b> ${order.size}
-<b>اللون:</b> ${order.color}
-<b>الطباعة:</b> ${order.printing}
-<b>بيد/بدون يد:</b> ${order.handle}
-<b>العدد المطلوب:</b> ${order.quantity}
-<b>شروط الدفع:</b> ${order.paymentTerms}
-<b>تاريخ التسليم:</b> ${order.deliveryDate}
-<b>الأيام المتبقية:</b> ${order.daysLeft}
-<b>تمت الموافقة بواسطة:</b> ${currentUser.email}
-`;
-                            await sendTelegramMessage(message);
-                            
-                            // إعادة تحميل الطلبات
-                            alert('تمت الموافقة على الطلب بنجاح');
-                            loadOrders();
-                            
-                        } catch (error) {
-                            console.error('خطأ في الموافقة على الطلب:', error);
-                            alert('حدث خطأ أثناء الموافقة على الطلب: ' + error.message);
-                        }
-                    }
-                });
-            });
-            
-            // رفض الطلب
-            document.querySelectorAll('.reject-order').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const orderId = btn.getAttribute('data-id');
-                    document.getElementById('reject-order-id').value = orderId;
-                    document.getElementById('reject-reason').value = '';
-                    document.getElementById('reject-order-modal').style.display = 'block';
-                });
-            });
-            
-            // تسليم الطلب
-            document.querySelectorAll('.deliver-order').forEach(checkbox => {
-                checkbox.addEventListener('change', async (e) => {
-                    if (e.target.checked) {
-                        if (confirm('هل تم تسليم هذا الطلب بالفعل؟')) {
-                            const orderId = e.target.getAttribute('data-id');
-                            try {
-                                // جلب بيانات الطلب
-                                const doc = await db.collection('orders').doc(orderId).get();
-                                if (!doc.exists) {
-                                    alert('لم يتم العثور على الطلب!');
-                                    return;
-                                }
-                                
-                                const order = doc.data();
-                                
-                                // تحديث حالة الطلب
-                                await db.collection('orders').doc(orderId).update({
-                                    status: 'delivered',
-                                    deliveredAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                    deliveredBy: {
-                                        uid: currentUser.uid,
-                                        email: currentUser.email,
-                                        name: (await db.collection('users').doc(currentUser.uid).get()).data()?.name || currentUser.email
-                                    }
-                                });
-                                
-                                // إرسال إشعار Telegram
-                                const message = `
-<b>🚚 تم تسليم طلب</b>
-<b>كود الطلب:</b> ${orderId}
-<b>اسم العميل:</b> ${order.customerName}
-<b>المقاس:</b> ${order.size}
-<b>اللون:</b> ${order.color}
-<b>الطباعة:</b> ${order.printing}
-<b>بيد/بدون يد:</b> ${order.handle}
-<b>العدد المطلوب:</b> ${order.quantity}
-<b>تاريخ التسليم:</b> ${order.deliveryDate}
-<b>تم تسجيل التسليم بواسطة:</b> ${currentUser.email}
-`;
-                                await sendTelegramMessage(message);
-                                
-                                // إعادة تحميل الطلبات
-                                alert('تم تسجيل تسليم الطلب بنجاح');
-                                loadOrders();
-                                
-                            } catch (error) {
-                                console.error('خطأ في تسجيل تسليم الطلب:', error);
-                                alert('حدث خطأ أثناء تسجيل تسليم الطلب: ' + error.message);
-                                e.target.checked = false;
-                            }
-                        } else {
-                            e.target.checked = false;
-                        }
-                    }
-                });
-            });
+            // Hide warning if visible
+            inactivityWarning.style.display = 'none';
         }
-
-        // تقديم نموذج رفض الطلب
-        document.getElementById('reject-order-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const orderId = document.getElementById('reject-order-id').value;
-            const rejectReason = document.getElementById('reject-reason').value;
-            
-            if (!rejectReason.trim()) {
-                alert('يرجى كتابة سبب الرفض');
-                return;
+        
+        function clearInactivityTimer() {
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
             }
             
-            try {
-                // جلب بيانات الطلب
-                const doc = await db.collection('orders').doc(orderId).get();
-                if (!doc.exists) {
-                    alert('لم يتم العثور على الطلب!');
-                    return;
+            if (logoutCountdown) {
+                clearTimeout(logoutCountdown);
+                logoutCountdown = null;
+            }
+            
+            if (logoutCountdownInterval) {
+                clearInterval(logoutCountdownInterval);
+                logoutCountdownInterval = null;
+            }
+        }
+        
+        function showLogoutWarning() {
+            // Show warning
+            inactivityWarning.style.display = 'block';
+            
+            // Set countdown
+            let seconds = 60; // 1 minute countdown
+            logoutCountdownEl.textContent = seconds;
+            
+            // Update countdown every second
+            logoutCountdownInterval = setInterval(() => {
+                seconds--;
+                logoutCountdownEl.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(logoutCountdownInterval);
                 }
-                
-                const order = doc.data();
-                
-                // تحديث حالة الطلب
-                await db.collection('orders').doc(orderId).update({
-                    status: 'rejected',
-                    rejectReason: rejectReason,
-                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    rejectedBy: {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        name: (await db.collection('users').doc(currentUser.uid).get()).data()?.name || currentUser.email
-                    }
-                });
-                
-                // إرسال إشعار Telegram
-                const message = `
-<b>❌ تم رفض طلب</b>
-<b>كود الطلب:</b> ${orderId}
-<b>اسم العميل:</b> ${order.customerName}
-<b>المقاس:</b> ${order.size}
-<b>اللون:</b> ${order.color}
-<b>الطباعة:</b> ${order.printing}
-<b>بيد/بدون يد:</b> ${order.handle}
-<b>العدد المطلوب:</b> ${order.quantity}
-<b>سبب الرفض:</b> ${rejectReason}
-<b>تم الرفض بواسطة:</b> ${currentUser.email}
-`;
-                await sendTelegramMessage(message);
-                
-                // إغلاق النافذة المنبثقة
-                document.getElementById('reject-order-modal').style.display = 'none';
-                
-                // إعادة تحميل الطلبات
-                alert('تم رفض الطلب بنجاح');
-                loadOrders();
-                
-            } catch (error) {
-                console.error('خطأ في رفض الطلب:', error);
-                alert('حدث خطأ أثناء رفض الطلب: ' + error.message);
-            }
-        });
-
-        // تقديم نموذج تعديل الطلب
-        document.getElementById('edit-order-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            }, 1000);
             
-            const orderId = document.getElementById('edit-order-id').value;
-            const customerName = document.getElementById('edit-customer-name').value;
-            const size = document.getElementById('edit-size').value;
-            const color = document.getElementById('edit-color').value;
-            const printing = document.getElementById('edit-printing').value;
-            const handle = document.getElementById('edit-handle').value;
-            const quantity = document.getElementById('edit-quantity').value;
-            const paymentTerms = document.getElementById('edit-payment-terms').value;
-            const deliveryDate = document.getElementById('edit-delivery-date').value;
-            
-            // حساب الأيام المتبقية
-            const today = new Date();
-            const dueDate = new Date(deliveryDate);
-            const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-            
-            try {
-                // تحديث الطلب
-                await db.collection('orders').doc(orderId).update({
-                    customerName,
-                    size,
-                    color,
-                    printing,
-                    handle,
-                    quantity: parseInt(quantity),
-                    paymentTerms,
-                    deliveryDate,
-                    daysLeft,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        name: (await db.collection('users').doc(currentUser.uid).get()).data()?.name || currentUser.email
-                    }
-                });
-                
-                // إرسال إشعار Telegram
-                const message = `
-<b>✏️ تم تعديل طلب</b>
-<b>كود الطلب:</b> ${orderId}
-<b>اسم العميل:</b> ${customerName}
-<b>المقاس:</b> ${size}
-<b>اللون:</b> ${color}
-<b>الطباعة:</b> ${printing}
-<b>بيد/بدون يد:</b> ${handle}
-<b>العدد المطلوب:</b> ${quantity}
-<b>شروط الدفع:</b> ${paymentTerms}
-<b>تاريخ التسليم:</b> ${deliveryDate}
-<b>الأيام المتبقية:</b> ${daysLeft}
-<b>تم التعديل بواسطة:</b> ${currentUser.email}
-`;
-                await sendTelegramMessage(message);
-                
-                // إغلاق النافذة المنبثقة
-                document.getElementById('edit-order-modal').style.display = 'none';
-                
-                // إعادة تحميل الطلبات
-                alert('تم تعديل الطلب بنجاح');
-                loadOrders();
-                
-            } catch (error) {
-                console.error('خطأ في تعديل الطلب:', error);
-                alert('حدث خطأ أثناء تعديل الطلب: ' + error.message);
-            }
-        });
-
-        // زر إضافة مستخدم (للمدير فقط)
-        document.getElementById('add-user-btn').addEventListener('click', () => {
-            if (userRole !== 'admin') {
-                alert('ليس لديك صلاحية إضافة مستخدمين جدد');
-                return;
-            }
-            
-            document.getElementById('add-user-modal').style.display = 'block';
-        });
-
-        // تقديم نموذج إضافة مستخدم
-        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (userRole !== 'admin') {
-                alert('ليس لديك صلاحية إضافة مستخدمين جدد');
-                return;
-            }
-            
-            const name = document.getElementById('new-user-name').value;
-            const email = document.getElementById('new-user-email').value;
-            const password = document.getElementById('new-user-password').value;
-            const role = document.getElementById('new-user-role').value;
-            
-            try {
-                // إنشاء المستخدم في Firebase Auth
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const newUser = userCredential.user;
-                
-                // إضافة معلومات المستخدم في Firestore
-                await db.collection('users').doc(newUser.uid).set({
-                    name,
-                    email,
-                    role,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    createdBy: {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        name: (await db.collection('users').doc(currentUser.uid).get()).data()?.name || currentUser.email
-                    }
-                });
-                
-                // إعادة تسجيل الدخول للمستخدم الحالي
-                await auth.signInWithEmailAndPassword(currentUser.email, document.getElementById('password').value);
-                
-                // إغلاق النافذة المنبثقة
-                document.getElementById('add-user-modal').style.display = 'none';
-                
-                // إعادة تعيين النموذج
-                document.getElementById('add-user-form').reset();
-                
-                // عرض رسالة نجاح
-                alert('تم إضافة المستخدم بنجاح');
-                
-            } catch (error) {
-                console.error('خطأ في إضافة المستخدم:', error);
-                document.getElementById('add-user-error').textContent = 'خطأ في إضافة المستخدم: ' + error.message;
-                document.getElementById('add-user-error').classList.remove('hidden');
-            }
-        });
-
-        // أزرار التصفية
-        document.getElementById('filter-all').addEventListener('click', () => {
-            loadOrders();
-        });
+            // Set logout timer
+            logoutCountdown = setTimeout(() => {
+                auth.signOut();
+                clearInactivityTimer();
+                inactivityWarning.style.display = 'none';
+            }, 60 * 1000); // 1 minute
+        }
         
-        document.getElementById('filter-pending').addEventListener('click', async () => {
-            try {
-                const snapshot = await db.collection('orders').where('status', '==', 'pending').get();
-                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في تصفية الطلبات المعلقة:', error);
-                alert('حدث خطأ أثناء تصفية الطلبات: ' + error.message);
-            }
-        });
+        // Loading Spinner Functions
+        function showLoading() {
+            loadingSpinner.classList.remove('hidden');
+        }
         
-        document.getElementById('filter-approved').addEventListener('click', async () => {
-            try {
-                const snapshot = await db.collection('orders').where('status', '==', 'approved').get();
-                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في تصفية الطلبات المقبولة:', error);
-                alert('حدث خطأ أثناء تصفية الطلبات: ' + error.message);
-            }
-        });
-        
-        document.getElementById('filter-rejected').addEventListener('click', async () => {
-            try {
-                const snapshot = await db.collection('orders').where('status', '==', 'rejected').get();
-                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في تصفية الطلبات المرفوضة:', error);
-                alert('حدث خطأ أثناء تصفية الطلبات: ' + error.message);
-            }
-        });
-        
-        document.getElementById('filter-delivered').addEventListener('click', async () => {
-            try {
-                const snapshot = await db.collection('orders').where('status', '==', 'delivered').get();
-                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في تصفية الطلبات المسلمة:', error);
-                alert('حدث خطأ أثناء تصفية الطلبات: ' + error.message);
-            }
-        });
-        
-        document.getElementById('filter-overdue').addEventListener('click', async () => {
-            try {
-                const snapshot = await db.collection('orders').where('status', '==', 'overdue').get();
-                const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في تصفية الطلبات المتأخرة:', error);
-                alert('حدث خطأ أثناء تصفية الطلبات: ' + error.message);
-            }
-        });
-
-        // البحث باسم العميل
-        document.getElementById('search-customer').addEventListener('input', async (e) => {
-            const searchTerm = e.target.value.trim().toLowerCase();
-            
-            if (!searchTerm) {
-                loadOrders();
-                return;
-            }
-            
-            try {
-                const snapshot = await db.collection('orders').get();
-                const orders = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(order => order.customerName.toLowerCase().includes(searchTerm));
-                
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في البحث:', error);
-                alert('حدث خطأ أثناء البحث: ' + error.message);
-            }
-        });
-
-        // البحث بعدد الأيام المتبقية
-        document.getElementById('search-days').addEventListener('input', async (e) => {
-            const days = parseInt(e.target.value);
-            
-            if (isNaN(days)) {
-                loadOrders();
-                return;
-            }
-            
-            try {
-                const snapshot = await db.collection('orders').get();
-                const orders = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(order => (order.daysLeft !== undefined && order.daysLeft <= days));
-                
-                displayOrders(orders);
-            } catch (error) {
-                console.error('خطأ في البحث:', error);
-                alert('حدث خطأ أثناء البحث: ' + error.message);
-            }
-        });
-
-        // زر الطباعة
-        document.getElementById('print-btn').addEventListener('click', () => {
-            window.print();
-        });
-
-        // زر تصدير Excel
-        document.getElementById('export-excel-btn').addEventListener('click', async () => {
-            try {
-                // إنشاء مصنف Excel جديد
-                const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('طلبات');
-                
-                // إعداد رأس الجدول
-                worksheet.columns = [
-                    { header: 'اسم العميل', key: 'customerName', width: 20 },
-                    { header: 'المقاس', key: 'size', width: 15 },
-                    { header: 'اللون', key: 'color', width: 15 },
-                    { header: 'الطباعة', key: 'printing', width: 15 },
-                    { header: 'بيد/بدون يد', key: 'handle', width: 15 },
-                    { header: 'العدد', key: 'quantity', width: 10 },
-                    { header: 'شروط الدفع', key: 'paymentTerms', width: 30 },
-                    { header: 'تاريخ التسليم', key: 'deliveryDate', width: 15 },
-                    { header: 'الأيام المتبقية', key: 'daysLeft', width: 15 },
-                    { header: 'حالة الطلب', key: 'status', width: 15 }
-                ];
-                
-                // ضبط اتجاه النص للعربية
-                worksheet.views = [{ rightToLeft: true }];
-                
-                // جلب البيانات من Firestore
-                const snapshot = await db.collection('orders').get();
-                
-                // إضافة البيانات إلى ورقة العمل
-                snapshot.forEach(doc => {
-                    const order = doc.data();
-                    
-                    // تنسيق حالة الطلب
-                    let statusText = '';
-                    switch(order.status) {
-                        case 'pending': statusText = 'معلق'; break;
-                        case 'approved': statusText = 'مقبول'; break;
-                        case 'rejected': statusText = 'مرفوض'; break;
-                        case 'delivered': statusText = 'تم التسليم'; break;
-                        case 'overdue': statusText = 'تأخر التسليم'; break;
-                    }
-                    
-                    // تنسيق تاريخ التسليم
-                    let formattedDate = '';
-                    if (order.deliveryDate) {
-                        const dateParts = order.deliveryDate.split('-');
-                        formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                    }
-                    
-                    // إضافة الصف
-                    worksheet.addRow({
-                        customerName: order.customerName,
-                        size: order.size,
-                        color: order.color,
-                        printing: order.printing,
-                        handle: order.handle,
-                        quantity: order.quantity,
-                        paymentTerms: order.paymentTerms,
-                        deliveryDate: formattedDate,
-                        daysLeft: order.daysLeft,
-                        status: statusText
-                    });
-                });
-                
-                // تنسيق رأس الجدول
-                worksheet.getRow(1).font = { bold: true };
-                
-                // تصدير الملف
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const url = URL.createObjectURL(blob);
-                
-                // إنشاء رابط وهمي للتنزيل
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'طلبات-العبوات-البلاستيكية.xlsx';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                
-                // تنظيف
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-                
-            } catch (error) {
-                console.error('خطأ في تصدير Excel:', error);
-                alert('حدث خطأ أثناء تصدير ملف Excel: ' + error.message);
-            }
-        });
-
-        // زر تصدير PDF
-        document.getElementById('export-pdf-btn').addEventListener('click', async () => {
-            try {
-                // جلب البيانات من Firestore
-                const snapshot = await db.collection('orders').get();
-                const orders = snapshot.docs.map(doc => doc.data());
-                
-                // تنسيق البيانات للجدول
-                const tableData = orders.map(order => {
-                    // تنسيق حالة الطلب
-                    let statusText = '';
-                    switch(order.status) {
-                        case 'pending': statusText = 'معلق'; break;
-                        case 'approved': statusText = 'مقبول'; break;
-                        case 'rejected': statusText = 'مرفوض'; break;
-                        case 'delivered': statusText = 'تم التسليم'; break;
-                        case 'overdue': statusText = 'تأخر التسليم'; break;
-                    }
-                    
-                    // تنسيق تاريخ التسليم
-                    let formattedDate = '';
-                    if (order.deliveryDate) {
-                        const dateParts = order.deliveryDate.split('-');
-                        formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                    }
-                    
-                    return [
-                        order.customerName,
-                        order.size,
-                        order.color,
-                        order.printing,
-                        order.handle,
-                        order.quantity,
-                        order.paymentTerms,
-                        formattedDate,
-                        order.daysLeft,
-                        statusText
-                    ];
-                });
-                
-                // إنشاء ملف PDF
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
-                // تعيين الخط للدعم العربي
-                doc.addFont('https://cdn.jsdelivr.net/npm/@fontsource/cairo@4.5.0/files/cairo-arabic-400-normal.woff', 'Cairo', 'normal');
-                doc.setFont('Cairo');
-                
-                // إضافة عنوان
-                doc.setFontSize(18);
-                doc.text('طلبات العبوات البلاستيكية', doc.internal.pageSize.width / 2, 20, { align: 'center' });
-                
-                // إنشاء الجدول
-                doc.autoTable({
-                    head: [['اسم العميل', 'المقاس', 'اللون', 'الطباعة', 'بيد/بدون يد', 'العدد', 'شروط الدفع', 'تاريخ التسليم', 'الأيام المتبقية', 'حالة الطلب']],
-                    body: tableData,
-                    startY: 30,
-                    styles: {
-                        font: 'Cairo',
-                        fontSize: 8
-                    },
-                    headStyles: {
-                        fillColor: [93, 92, 222],
-                        textColor: [255, 255, 255],
-                        halign: 'center'
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 30 },
-                        6: { cellWidth: 40 }
-                    },
-                    theme: 'grid'
-                });
-                
-                // تنزيل الملف
-                doc.save('طلبات-العبوات-البلاستيكية.pdf');
-                
-            } catch (error) {
-                console.error('خطأ في تصدير PDF:', error);
-                alert('حدث خطأ أثناء تصدير ملف PDF: ' + error.message);
-            }
-        });
-
-        // إغلاق النوافذ المنبثقة
-        document.getElementById('close-add-user').addEventListener('click', () => {
-            document.getElementById('add-user-modal').style.display = 'none';
-        });
-        
-        document.getElementById('close-view-order').addEventListener('click', () => {
-            document.getElementById('view-order-modal').style.display = 'none';
-        });
-        
-        document.getElementById('close-edit-order').addEventListener('click', () => {
-            document.getElementById('edit-order-modal').style.display = 'none';
-        });
-        
-        document.getElementById('close-reject-order').addEventListener('click', () => {
-            document.getElementById('reject-order-modal').style.display = 'none';
-        });
-        
-        // إغلاق النافذة المنبثقة عند النقر خارجها
-        window.addEventListener('click', (e) => {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        });
-
-        // مراقبة حالة المصادقة
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                // سيتم التعامل مع تسجيل الدخول في مكان آخر
-            } else {
-                currentUser = null;
-                document.getElementById('app-container').classList.add('hidden');
-                document.getElementById('login-container').classList.remove('hidden');
-            }
-        });
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
+        }
     </script>
 </body>
 </html>
